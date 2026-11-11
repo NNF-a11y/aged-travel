@@ -1,0 +1,1854 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="拾光出行：适老化老人出行助手，包含场景预览、路线跟踪、子女代管与长辈极简模式。">
+<title>拾光出行 · 适老化老人出行助手</title>
+<style>
+  /* ============================================================
+     适老化设计基线
+     - 根字号 18px：全站文字默认不小于 18px，正文、标签、提示均按 rem 缩放
+     - 交互控件统一最小高度 48px（开关、输入框、按钮）
+     - 深色文字 + 浅色背景，正文对比度 ≥ 7:1
+     - 极简模式可把根字号放大到 24px，并为黑底黄字高对比模式预留变量
+     ============================================================ */
+  :root {
+    --bg: #f5f3ec;
+    --panel: #ffffff;
+    --panel-2: #faf9f4;
+    --ink: #14211c;
+    --ink-2: #3c4a44;
+    --line: #d9d6cb;
+    --green: #175c43;
+    --green-ink: #ffffff;
+    --green-soft: #e3efe7;
+    --danger: #b3261e;
+    --danger-soft: #fdecea;
+    --focus: #0b5fff;
+    --radius: 14px;
+  }
+
+  /* 高对比模式：黑底黄字，所有强调色同步翻转 */
+  html.hc {
+    --bg: #000000;
+    --panel: #000000;
+    --panel-2: #000000;
+    --ink: #ffe600;
+    --ink-2: #ffe600;
+    --line: #ffe600;
+    --green: #ffe600;
+    --green-ink: #000000;
+    --green-soft: #000000;
+    --danger: #ffe600;
+    --danger-soft: #000000;
+    --focus: #ffffff;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html { font-size: 18px; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 1rem;
+    line-height: 1.65;
+    font-family: "Noto Sans SC", "Microsoft YaHei", "PingFang SC", system-ui, -apple-system, sans-serif;
+    -webkit-text-size-adjust: 100%;
+  }
+  h1, h2, h3 { line-height: 1.35; margin: 0; letter-spacing: .01em; }
+  p { margin: 0; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+
+  :focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 3px;
+  }
+
+  /* 键盘用户跳过导航 */
+  .skip {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    z-index: 20;
+    padding: .75rem 1.2rem;
+    background: var(--panel);
+    color: var(--ink);
+    border: 2px solid var(--green);
+    border-radius: 0 0 12px 0;
+    font-size: 1rem;
+  }
+  .skip:focus { left: 0; }
+
+  /* ---------- 顶栏与四个模块导航 ---------- */
+  .topbar {
+    background: var(--panel);
+    border-bottom: 1px solid var(--line);
+  }
+  .topbar-inner {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .9rem 1.4rem;
+  }
+  .brand { display: flex; flex-wrap: wrap; align-items: baseline; gap: .25rem .7rem; }
+  .brand strong { font-size: 1.3rem; letter-spacing: .02em; }
+  .brand-sub { font-size: 1rem; color: var(--ink-2); }
+
+  .nav { display: flex; flex-wrap: wrap; gap: .5rem; }
+  .nav-btn {
+    min-height: 48px;
+    min-width: 48px;
+    padding: .5rem 1.1rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--ink);
+    background: var(--panel);
+    border: 2px solid var(--line);
+    border-radius: 12px;
+    cursor: pointer;
+  }
+  .nav-btn:hover { border-color: var(--green); }
+  .nav-btn.is-active {
+    color: var(--green-ink);
+    background: var(--green);
+    border-color: var(--green);
+  }
+  html.hc .nav-btn.is-active { color: #000; background: #ffe600; }
+
+  /* ---------- 主体 ---------- */
+  .wrap {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 1.4rem 1rem 3rem;
+  }
+  .module > h2 {
+    font-size: 1.5rem;
+    margin-bottom: .35rem;
+  }
+  .lead {
+    color: var(--ink-2);
+    margin-bottom: 1.3rem;
+    max-width: 46em;
+  }
+
+  /* ---------- 模块一：场景预览 ---------- */
+  .cards {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+  @media (min-width: 760px) {
+    .cards { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (min-width: 1040px) {
+    .cards { grid-template-columns: repeat(3, 1fr); }
+  }
+  .card {
+    display: flex;
+    flex-direction: column;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  html.hc .card { border-width: 2px; }
+
+  /* 占位风景图：全部用 CSS 渐变绘制，不依赖任何外部图片 */
+  .art {
+    aspect-ratio: 16 / 9;
+    border-bottom: 1px solid var(--line);
+  }
+  .art-xihu {
+    background:
+      radial-gradient(circle at 76% 24%, #fff6d8 0 9%, rgba(255, 246, 216, 0) 10%),
+      radial-gradient(ellipse 70% 38% at 30% 92%, #a9c7a1 0 60%, rgba(169, 199, 161, 0) 61%),
+      radial-gradient(ellipse 80% 40% at 82% 96%, #93b98c 0 60%, rgba(147, 185, 140, 0) 61%),
+      linear-gradient(165deg, #c6deea 0%, #e7f1ea 48%, #cfe3c6 100%);
+  }
+  .art-gugong {
+    background:
+      radial-gradient(circle at 24% 20%, #ffe9c6 0 8%, rgba(255, 233, 198, 0) 9%),
+      linear-gradient(0deg, #8a4d2e 0 18%, rgba(138, 77, 46, 0) 19%),
+      linear-gradient(120deg, #f3dcbf 0%, #ddb07a 52%, #a96a42 100%);
+  }
+  .art-park {
+    background:
+      radial-gradient(circle at 68% 22%, #fdf6d3 0 8%, rgba(253, 246, 211, 0) 9%),
+      radial-gradient(ellipse 64% 30% at 18% 94%, #9dc891 0 60%, rgba(157, 200, 145, 0) 61%),
+      radial-gradient(ellipse 74% 34% at 78% 98%, #86b57c 0 60%, rgba(134, 181, 124, 0) 61%),
+      linear-gradient(160deg, #d9e9c9 0%, #b7d6a5 55%, #9cc48f 100%);
+  }
+
+  /* 高对比模式下风景图转为深灰，保证整页只有黑与黄 */
+  html.hc .art { filter: grayscale(1) brightness(.45); }
+
+  .card-body {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+    padding: 1.1rem 1.1rem 1.2rem;
+    flex: 1;
+  }
+  .card h3 { font-size: 1.2rem; }
+  .card-sub { color: var(--ink-2); }
+
+  .badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .45rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .badge {
+    font-size: .9rem;        /* 16.2px，满足标签不小于 16px 的要求 */
+    font-weight: 700;
+    line-height: 1.4;
+    padding: .28rem .6rem;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+  .b-wheel  { color: #0b3b7a; background: #e3efff; border-color: #bcd6f5; }
+  .b-bench  { color: #1c5b2a; background: #e6f4e6; border-color: #bfe0c2; }
+  .b-toilet { color: #4a2478; background: #f0e8fb; border-color: #ddc9f2; }
+  .b-help   { color: #7a4600; background: #fdf1dc; border-color: #f0d6a8; }
+  html.hc .badge { color: #ffe600; background: #000; border-color: #ffe600; }
+
+  .detail-btn {
+    margin-top: auto;
+    min-height: 48px;
+    padding: .55rem 1rem;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--green);
+    background: var(--panel);
+    border: 2px solid var(--green);
+    border-radius: 12px;
+    cursor: pointer;
+  }
+  .detail-btn:hover { background: var(--green-soft); }
+  html.hc .detail-btn { color: #ffe600; background: #000; border-color: #ffe600; }
+
+  .detail {
+    padding-top: .8rem;
+    border-top: 1px dashed var(--line);
+    color: var(--ink-2);
+  }
+  .detail p { margin-bottom: .55rem; }
+  .detail p:last-child { margin-bottom: 0; }
+  .detail strong { color: var(--ink); }
+  .detail[hidden] { display: none; }
+
+  /* ---------- 模块二：路线跟踪 ---------- */
+  .loc-box {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1.1rem;
+  }
+  html.hc .loc-box { border-width: 2px; }
+  .loc-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+  }
+  .loc-head h3 { font-size: 1.15rem; }
+  .loc-status { margin-top: .7rem; font-weight: 700; }
+  .loc-status.is-error { color: var(--danger); }
+  .coords {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    gap: .75rem;
+    margin-top: .8rem;
+  }
+  .coord {
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: .7rem .9rem;
+  }
+  .coord span { display: block; color: var(--ink-2); }
+  .coord strong {
+    font-size: 1.15rem;
+    font-variant-numeric: tabular-nums;
+    word-break: break-all;
+  }
+  .hint { color: var(--ink-2); margin-top: .75rem; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    min-height: 48px;
+    padding: .6rem 1.2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: center;
+    color: var(--ink);
+    background: var(--panel);
+    border: 2px solid var(--line);
+    border-radius: 12px;
+    cursor: pointer;
+  }
+  .btn:hover { border-color: var(--green); }
+  .btn.primary {
+    color: var(--green-ink);
+    background: var(--green);
+    border-color: var(--green);
+  }
+  .btn.primary:hover { filter: brightness(1.06); }
+  .btn.danger {
+    color: #ffffff;
+    background: var(--danger);
+    border-color: var(--danger);
+  }
+  html.hc .btn.danger { color: #000; background: #ffe600; border-color: #ffe600; }
+
+  /* 一键紧急求助：整行、醒目红色、字号 24.3px、高度 84px */
+  .sos {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 84px;
+    margin: 1.5rem 0 .6rem;
+    padding: .6rem 1rem;
+    font-size: 1.35rem;
+    font-weight: 800;
+    letter-spacing: .02em;
+    text-align: center;
+    color: #ffffff;
+    background: var(--danger);
+    border: 4px solid transparent;
+    border-radius: 16px;
+    cursor: pointer;
+  }
+  .sos:hover { filter: brightness(1.08); }
+  html.hc .sos {
+    color: #000000;
+    background: #ffe600;
+    border-color: #000000;
+  }
+
+  .sos-status {
+    margin-top: .4rem;
+    padding: .95rem 1.1rem;
+    font-weight: 700;
+    color: var(--ink);
+    background: var(--danger-soft);
+    border: 1px solid var(--danger);
+    border-radius: 12px;
+  }
+  .sos-log {
+    margin: .8rem 0 0;
+    padding-left: 1.4rem;
+    color: var(--ink-2);
+  }
+  .sos-log li { margin-bottom: .25rem; }
+
+  .feed-title { font-size: 1.2rem; margin: 1.8rem 0 .8rem; }
+  .feed {
+    display: grid;
+    gap: .75rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .feed-item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: .5rem .9rem;
+    padding: .9rem 1rem;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-left: 6px solid var(--line);
+    border-radius: 12px;
+  }
+  .feed-item.state-ok    { border-left-color: #2e7d32; }
+  .feed-item.state-warn  { border-left-color: #b26a00; }
+  .feed-item.state-alert { border-left-color: #b3261e; }
+  html.hc .feed-item { border-color: #ffe600; border-left-color: #ffe600; }
+  .f-main { flex: 1 1 15rem; }
+  .f-text { font-weight: 600; }
+  .f-meta { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
+  .f-meta time { color: var(--ink-2); font-variant-numeric: tabular-nums; }
+  .state-pill {
+    padding: .12rem .6rem;
+    font-weight: 700;
+    border-radius: 999px;
+    border: 1px solid transparent;
+  }
+  .state-pill-ok    { color: #1c5b2a; background: #e6f4e6; border-color: #bfe0c2; }
+  .state-pill-warn  { color: #7a4600; background: #fdf1dc; border-color: #f0d6a8; }
+  .state-pill-alert { color: #8f1d16; background: #fdecea; border-color: #f4bdb8; }
+  html.hc .state-pill { color: #ffe600; background: #000; border-color: #ffe600; }
+
+  /* ---------- 路线地图 ---------- */
+  .map-card {
+    margin-top: 1.2rem;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  html.hc .map-card { border-width: 2px; }
+  .map-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .6rem;
+    padding: 1rem 1.1rem .4rem;
+  }
+  .map-head h3 { font-size: 1.15rem; }
+  .map-badge {
+    padding: .15rem .7rem;
+    font-weight: 700;
+    color: var(--green);
+    background: var(--green-soft);
+    border: 1px solid var(--green);
+    border-radius: 999px;
+  }
+  html.hc .map-badge { color: #ffe600; background: #000; border-color: #ffe600; }
+
+  .map {
+    position: relative;
+    aspect-ratio: 720 / 440;
+    background: #eef4e6;
+  }
+  .map svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .map-labels { position: absolute; inset: 0; pointer-events: none; }
+  .map-label {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    padding: .12rem .6rem;
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.5;
+    color: var(--ink);
+    background: rgba(255, 255, 255, .94);
+    border: 1px solid #c8d4c2;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  html.hc .map-label { color: #ffe600; background: #000; border-color: #ffe600; }
+
+  .map-pin {
+    position: absolute;
+    z-index: 3;
+    width: 30px;
+    height: 30px;
+    transform: translate(-50%, -50%);
+  }
+  .map-pin::before {
+    content: "";
+    position: absolute;
+    inset: -14px;
+    background: rgba(23, 92, 67, .22);
+    border-radius: 50%;
+    animation: pin-pulse 2.2s ease-out infinite;
+  }
+  .map-pin::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--green);
+    border: 3px solid #ffffff;
+    border-radius: 50%;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .35);
+  }
+  html.hc .map-pin::before { background: rgba(255, 230, 0, .35); }
+  html.hc .map-pin::after { background: #ffe600; border-color: #000000; }
+  .pin-label {
+    position: absolute;
+    top: calc(100% + 9px);
+    left: 50%;
+    transform: translateX(-50%);
+    padding: .08rem .55rem;
+    font-size: 1rem;
+    font-weight: 700;
+    white-space: nowrap;
+    color: var(--ink);
+    background: rgba(255, 255, 255, .96);
+    border: 1px solid #c8d4c2;
+    border-radius: 999px;
+  }
+  html.hc .pin-label { color: #ffe600; background: #000; border-color: #ffe600; }
+  /* 标识靠近地图底部时，把文字挪到圆点上方，避免超出地图 */
+  .pin-label.pin-label-up { top: auto; bottom: calc(100% + 9px); }
+
+  .map-empty {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .7rem;
+    padding: 1.2rem;
+    font-weight: 700;
+    text-align: center;
+    background: rgba(245, 243, 236, .9);
+  }
+  .map-empty[hidden] { display: none; }
+  .map-empty p { margin: 0; }
+  html.hc .map-empty { background: rgba(0, 0, 0, .9); }
+  .map-empty .btn { min-height: 48px; }
+  .map-foot { padding: .6rem 1.1rem 1rem; color: var(--ink-2); }
+
+  @keyframes pin-pulse {
+    0%   { transform: scale(.7); opacity: .9; }
+    70%  { transform: scale(1.7); opacity: 0; }
+    100% { transform: scale(1.7); opacity: 0; }
+  }
+  @media (max-width: 600px) {
+    .map-label-2 { display: none; }
+  }
+  @media (max-width: 420px) {
+    .map-label:not(.map-label-main) { display: none; }
+  }
+
+  /* ---------- 模块三：子女代管 ---------- */
+  .note {
+    padding: .9rem 1.1rem;
+    margin-bottom: 1.2rem;
+    font-weight: 700;
+    background: var(--green-soft);
+    border-left: 6px solid var(--green);
+    border-radius: 10px;
+  }
+  html.hc .note { background: #000; border: 2px solid #ffe600; }
+
+  .form {
+    display: grid;
+    gap: 1.05rem;
+    padding: 1.1rem;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+  }
+  html.hc .form { border-width: 2px; }
+  .field { display: grid; gap: .4rem; }
+  .field label { font-weight: 700; }
+  .req { color: var(--danger); }
+  select,
+  input[type="date"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="text"] {
+    width: 100%;
+    min-height: 48px;
+    padding: .45rem .7rem;
+    background: var(--panel);
+    color: var(--ink);
+    border: 2px solid var(--line);
+    border-radius: 10px;
+    cursor: pointer;
+  }
+  html.hc select,
+  html.hc input[type="date"],
+  html.hc input[type="number"],
+  html.hc input[type="tel"],
+  html.hc input[type="text"] { border-color: #ffe600; }
+  .err { color: var(--danger); font-weight: 700; }
+
+  .check {
+    display: flex;
+    align-items: center;
+    gap: .8rem;
+    min-height: 48px;
+  }
+  .check label { font-weight: 600; cursor: pointer; }
+  /* 复选框整体做成 48×48 的可点按方块，满足触控区域要求 */
+  .check input[type="checkbox"] {
+    flex: none;
+    width: 48px;
+    height: 48px;
+    margin: 0;
+    appearance: none;
+    background-color: var(--panel);
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 26px 26px;
+    border: 2px solid var(--line);
+    border-radius: 10px;
+    cursor: pointer;
+  }
+  html.hc .check input[type="checkbox"] { border-color: #ffe600; }
+  .check input[type="checkbox"]:checked {
+    background-color: var(--green);
+    border-color: var(--green);
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M4 12.5l5 5 11-11' fill='none' stroke='%23ffffff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  }
+  html.hc .check input[type="checkbox"]:checked {
+    background-color: #ffe600;
+    border-color: #ffe600;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M4 12.5l5 5 11-11' fill='none' stroke='%23000000' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  }
+
+  .book-ok {
+    padding: .9rem 1.1rem;
+    font-weight: 700;
+    background: var(--green-soft);
+    border: 2px solid var(--green);
+    border-radius: 12px;
+  }
+  html.hc .book-ok { background: #000; border-color: #ffe600; }
+  .book-ok[hidden] { display: none; }
+
+  /* ---------- 个人中心 ---------- */
+  .profile {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1.1rem;
+    padding: 1.2rem;
+    margin-bottom: 1.1rem;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+  }
+  html.hc .profile { border-width: 2px; }
+  .avatar {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 4rem;
+    height: 4rem;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #ffffff;
+    background: var(--green);
+    border-radius: 50%;
+  }
+  html.hc .avatar { color: #000000; background: #ffe600; }
+  .profile h3 { font-size: 1.25rem; }
+  .profile p { color: var(--ink-2); }
+
+  .acc-grid {
+    display: grid;
+    gap: 1rem;
+    margin-bottom: 1.2rem;
+  }
+  @media (min-width: 860px) {
+    .acc-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+  .acc-card {
+    display: flex;
+    flex-direction: column;
+    gap: .6rem;
+    padding: 1.1rem;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+  }
+  html.hc .acc-card { border-width: 2px; }
+  .acc-card h3 { font-size: 1.12rem; }
+  .acc-card p { color: var(--ink-2); }
+  .acc-card ul { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
+  .acc-card li {
+    padding: .55rem .7rem;
+    color: var(--ink);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+  }
+  html.hc .acc-card li { color: #ffe600; background: #000; border-color: #ffe600; }
+  .acc-card .btn { margin-top: auto; }
+  .account-guest {
+    padding: 1.3rem;
+  }
+  .account-guest h3 { margin-bottom: .4rem; }
+  .account-guest .btn { margin-top: .9rem; }
+  .account-guest .hint { margin-top: .8rem; }
+  .login-lead { color: var(--ink-2); }
+
+  /* ---------- 模块四：极简模式 ---------- */
+  .switch-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.1rem;
+    margin-bottom: 1rem;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+  }
+  html.hc .switch-row { border-width: 2px; }
+  .switch-label { display: block; font-size: 1.12rem; font-weight: 700; }
+  .switch-desc { display: block; color: var(--ink-2); }
+
+  .switch {
+    display: inline-flex;
+    align-items: center;
+    gap: .7rem;
+    min-height: 48px;
+    padding: .2rem 0;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    font-weight: 700;
+  }
+  .track {
+    position: relative;
+    width: 64px;
+    height: 36px;
+    background: #c9cfca;
+    border: 2px solid #8f9a93;
+    border-radius: 999px;
+  }
+  .knob {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 26px;
+    height: 26px;
+    background: #ffffff;
+    border: 1px solid #8f9a93;
+    border-radius: 50%;
+    transition: transform .16s ease;
+  }
+  .switch[aria-checked="true"] .track { background: var(--green); border-color: var(--green); }
+  .switch[aria-checked="true"] .knob { transform: translateX(28px); }
+  .switch-text { min-width: 3.4em; text-align: left; }
+  html.hc .track { background: #000; border-color: #ffe600; }
+  html.hc .knob { background: #ffe600; border-color: #ffe600; }
+  html.hc .switch[aria-checked="true"] .track { background: #ffe600; }
+  html.hc .switch[aria-checked="true"] .knob { background: #000; }
+
+  .voice-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .6rem;
+    width: 100%;
+    min-height: 72px;
+    margin: 1.4rem 0 .7rem;
+    padding: .6rem 1rem;
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--green-ink);
+    background: var(--green);
+    border: 2px solid var(--green);
+    border-radius: 14px;
+    cursor: pointer;
+  }
+  .voice-btn.is-listening {
+    color: #ffffff;
+    background: var(--danger);
+    border-color: var(--danger);
+  }
+  html.hc .voice-btn { color: #000; background: #ffe600; }
+  html.hc .voice-btn.is-listening { color: #000; background: #ffe600; }
+
+  .voice-msg { min-height: 1.65em; font-weight: 700; color: var(--ink-2); }
+  .voice-msg.is-error { color: var(--danger); }
+  textarea {
+    width: 100%;
+    min-height: 110px;
+    margin-top: .5rem;
+    padding: .7rem .8rem;
+    font-size: 1rem;
+    background: var(--panel);
+    color: var(--ink);
+    border: 2px solid var(--line);
+    border-radius: 10px;
+    resize: vertical;
+  }
+  html.hc textarea { border-color: #ffe600; }
+  .field-label { display: block; font-size: 1.12rem; font-weight: 700; margin-top: 1rem; }
+
+  /* ---------- 底部与弹窗 ---------- */
+  .foot {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 1.2rem 1rem 2.4rem;
+    color: var(--ink-2);
+    border-top: 1px solid var(--line);
+  }
+
+  dialog {
+    width: min(34rem, 92vw);
+    padding: 0;
+    color: var(--ink);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, .3);
+  }
+  html.hc dialog { border: 2px solid #ffe600; }
+  dialog::backdrop { background: rgba(10, 16, 13, .55); }
+  .dialog-body { padding: 1.4rem; }
+  .dialog-body h2 { font-size: 1.35rem; margin-bottom: .5rem; }
+  .dialog-body p { color: var(--ink-2); margin-bottom: 1.2rem; }
+  .dialog-actions { display: flex; flex-wrap: wrap; gap: .75rem; }
+  .dialog-actions .btn { flex: 1 1 9rem; min-height: 52px; }
+
+  .login-form { display: grid; gap: .95rem; margin-top: .4rem; }
+  .login-form .field { display: grid; gap: .4rem; }
+  .login-form .field label { font-weight: 700; }
+  .code-row { display: flex; flex-wrap: wrap; gap: .6rem; }
+  .code-row input { flex: 1 1 8rem; }
+  .code-row .btn { flex: 0 0 auto; min-height: 48px; }
+  .login-actions { display: grid; gap: .7rem; }
+  .login-actions .btn { min-height: 52px; }
+  .login-hint { margin-top: .8rem; color: var(--ink-2); }
+  .login-brand { margin-bottom: .3rem; font-weight: 800; color: var(--green); }
+  html.hc .login-brand { color: #ffe600; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .knob { transition: none; }
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">跳到主要内容</a>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <strong>拾光出行</strong>
+      <span class="brand-sub">适老化老人出行助手</span>
+    </div>
+    <nav class="nav" aria-label="功能模块">
+      <button type="button" class="nav-btn is-active" data-target="preview" aria-current="true">场景预览</button>
+      <button type="button" class="nav-btn" data-target="route">路线跟踪</button>
+      <button type="button" class="nav-btn" data-target="family">子女代管</button>
+      <button type="button" class="nav-btn" data-target="simple">极简模式</button>
+      <button type="button" class="nav-btn" data-target="account">个人中心</button>
+    </nav>
+  </div>
+</header>
+
+<main id="main" class="wrap">
+
+  <!-- ================= 模块一：场景预览 ================= -->
+  <section class="module" id="mod-preview" aria-labelledby="h-preview">
+    <h2 id="h-preview">场景预览</h2>
+    <p class="lead">三个适合慢慢走的去处。每张卡片标注了无障碍通道、休息长椅、无障碍卫生间和求助点，出发前可以先心里有数。</p>
+
+    <div class="cards">
+
+      <article class="card">
+        <div class="art art-xihu" role="img" aria-label="西湖苏堤的示意图：浅蓝天空下有湖面和绿树"></div>
+        <div class="card-body">
+          <h3>西湖苏堤</h3>
+          <p class="card-sub">杭州 · 全长约 2.8 公里 · 平缓石板路</p>
+          <ul class="badges" aria-label="适老信息">
+            <li class="badge b-wheel">♿ 无障碍通道</li>
+            <li class="badge b-bench">🪑 休息长椅</li>
+            <li class="badge b-toilet">🚻 无障碍卫生间</li>
+            <li class="badge b-help">☎ 求助点</li>
+          </ul>
+          <button type="button" class="detail-btn" data-detail-btn aria-expanded="false" aria-controls="detail-xihu">查看详情</button>
+          <div class="detail" id="detail-xihu" hidden>
+            <p><strong>无障碍设施分布：</strong>苏堤全线为无台阶石板路，宽约 2.2 米，坡度平缓，轮椅与助行器可全程通行；跨虹桥、压堤桥设有缓坡。</p>
+            <p><strong>休息点数量：</strong>18 处长椅（多分布在桥头与树荫下），另有 4 处凉亭，合计 22 处可坐下休息的地方。</p>
+            <p><strong>卫生间与求助：</strong>无障碍卫生间 2 处（南入口、北入口游客服务点旁）；求助点 3 处（景区岗亭、游船码头、南门服务台）。</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="art art-gugong" role="img" aria-label="故宫中轴线的示意图：暖色天空与宫殿屋顶轮廓"></div>
+        <div class="card-body">
+          <h3>故宫中轴线</h3>
+          <p class="card-sub">北京 · 中轴线约 1.8 公里 · 有坡道与轮椅借用</p>
+          <ul class="badges" aria-label="适老信息">
+            <li class="badge b-wheel">♿ 无障碍通道</li>
+            <li class="badge b-bench">🪑 休息长椅</li>
+            <li class="badge b-toilet">🚻 无障碍卫生间</li>
+            <li class="badge b-help">☎ 求助点</li>
+          </ul>
+          <button type="button" class="detail-btn" data-detail-btn aria-expanded="false" aria-controls="detail-gugong">查看详情</button>
+          <div class="detail" id="detail-gugong" hidden>
+            <p><strong>无障碍设施分布：</strong>无障碍参观路线从午门东侧无障碍入口进入，经太和门广场到乾清宫，沿途设坡道；午门服务处可免费借用轮椅。</p>
+            <p><strong>休息点数量：</strong>12 处长椅（广场两侧、御花园内），御花园另有 6 组石凳，合计 18 处。</p>
+            <p><strong>卫生间与求助：</strong>无障碍卫生间 3 处（午门、太和门、御花园）；求助点 2 处（午门服务台、神武门岗亭）。</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="art art-park" role="img" aria-label="社区公园的示意图：浅绿草地上有树影和步道"></div>
+        <div class="card-body">
+          <h3>社区公园</h3>
+          <p class="card-sub">家门口 · 环湖步道 1.2 公里 · 全程平路</p>
+          <ul class="badges" aria-label="适老信息">
+            <li class="badge b-wheel">♿ 无障碍通道</li>
+            <li class="badge b-bench">🪑 休息长椅</li>
+            <li class="badge b-toilet">🚻 无障碍卫生间</li>
+            <li class="badge b-help">☎ 求助点</li>
+          </ul>
+          <button type="button" class="detail-btn" data-detail-btn aria-expanded="false" aria-controls="detail-park">查看详情</button>
+          <div class="detail" id="detail-park" hidden>
+            <p><strong>无障碍设施分布：</strong>环湖步道宽 3 米，全程平路无台阶，入口设缓坡；路面为防滑铺装，雨天也不易打滑。</p>
+            <p><strong>休息点数量：</strong>9 处长椅，平均每 150 米一处，均带靠背和扶手；湖心亭旁另有 2 处凉亭，合计 11 处。</p>
+            <p><strong>卫生间与求助：</strong>无障碍卫生间 1 处（东门管理房旁）；求助点 1 处（湖心亭旁），可按铃呼叫值班人员。</p>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ================= 模块二：路线跟踪 ================= -->
+  <section class="module" id="mod-route" aria-labelledby="h-route" hidden>
+    <h2 id="h-route">路线跟踪</h2>
+    <p class="lead">看到当前位置，心里更踏实。遇到需要帮忙的情况，红色的求助按钮随时都在。</p>
+
+    <div class="loc-box">
+      <div class="loc-head">
+        <h3>当前位置</h3>
+        <button type="button" class="btn" id="locateBtn">重新定位</button>
+      </div>
+      <!-- 位置信息通过浏览器定位接口获取；需 HTTPS 或 localhost 环境 -->
+      <p class="loc-status" id="locStatus" role="status">正在获取定位…</p>
+      <div class="coords">
+        <div class="coord">
+          <span>纬度</span>
+          <strong id="lat">—</strong>
+        </div>
+        <div class="coord">
+          <span>经度</span>
+          <strong id="lng">—</strong>
+        </div>
+      </div>
+      <p class="hint">定位需要 HTTPS 或 localhost 环境；如果直接在本地双击打开文件，浏览器可能拒绝授权。换到 http://localhost 或线上 HTTPS 地址即可正常获取。</p>
+    </div>
+
+    <!-- 位置地图：示意图 + 实时位置标识 -->
+    <div class="map-card">
+      <div class="map-head">
+        <h3>位置地图</h3>
+        <span class="map-badge" id="mapBadge">等待定位</span>
+      </div>
+      <div class="map" id="mapWrap">
+        <svg viewBox="0 0 720 440" aria-hidden="true" focusable="false">
+          <rect width="720" height="440" fill="#eef4e6" />
+          <ellipse cx="110" cy="80" rx="170" ry="100" fill="#dcecd0" />
+          <ellipse cx="640" cy="390" rx="190" ry="120" fill="#d9ebcc" />
+          <ellipse cx="300" cy="410" rx="170" ry="80" fill="#e2f0d8" />
+          <ellipse cx="520" cy="300" rx="150" ry="78" fill="#cfe6f0" />
+          <ellipse cx="520" cy="300" rx="150" ry="78" fill="none" stroke="#a9cfdd" stroke-width="3" />
+          <path d="M420 296 q30 -14 60 0 t60 0" fill="none" stroke="#a9cfdd" stroke-width="3" stroke-linecap="round" />
+          <path d="M452 322 q25 -12 50 0 t50 0" fill="none" stroke="#a9cfdd" stroke-width="3" stroke-linecap="round" />
+
+          <path d="M70 150 C 190 70 430 60 600 130 C 690 175 660 320 540 350 C 380 390 170 360 90 270 Z" fill="none" stroke="#f2e7d3" stroke-width="30" stroke-linecap="round" />
+          <path d="M70 150 C 190 70 430 60 600 130 C 690 175 660 320 540 350 C 380 390 170 360 90 270 Z" fill="none" stroke="#ffffff" stroke-width="2" stroke-dasharray="10 12" stroke-linecap="round" />
+          <path d="M250 110 L 300 340" fill="none" stroke="#f2e7d3" stroke-width="16" stroke-linecap="round" />
+          <path d="M430 95 L 470 200" fill="none" stroke="#f2e7d3" stroke-width="16" stroke-linecap="round" />
+          <path d="M600 130 L 560 250" fill="none" stroke="#f2e7d3" stroke-width="16" stroke-linecap="round" />
+
+          <rect x="55" y="35" width="96" height="58" rx="8" fill="#e6dfd2" stroke="#cdc4b2" stroke-width="2" />
+          <rect x="600" y="32" width="78" height="72" rx="8" fill="#e6dfd2" stroke="#cdc4b2" stroke-width="2" />
+          <rect x="72" y="330" width="86" height="62" rx="8" fill="#e6dfd2" stroke="#cdc4b2" stroke-width="2" />
+
+          <circle cx="180" cy="258" r="13" fill="#b7d3a9" />
+          <circle cx="212" cy="278" r="10" fill="#b7d3a9" />
+          <circle cx="330" cy="180" r="12" fill="#b7d3a9" />
+          <circle cx="620" cy="210" r="11" fill="#b7d3a9" />
+          <circle cx="150" cy="120" r="10" fill="#b7d3a9" />
+          <circle cx="480" cy="120" r="12" fill="#b7d3a9" />
+
+          <circle id="mapAcc" cx="360" cy="220" r="0" fill="rgba(23,92,67,.12)" stroke="#2e7d32" stroke-width="2" stroke-dasharray="6 6" visibility="hidden" />
+          <polyline id="mapTrail" points="" fill="none" stroke="#2e7d32" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" visibility="hidden" />
+        </svg>
+        <div class="map-labels" aria-hidden="true">
+          <span class="map-label map-label-main" style="left:20%;top:20%">🏠 游客中心</span>
+          <span class="map-label" style="left:72%;top:16%">🚻 无障碍卫生间</span>
+          <span class="map-label map-label-2" style="left:36%;top:74%">🪑 长椅区</span>
+          <span class="map-label map-label-2" style="left:87%;top:60%">🚪 出入口</span>
+        </div>
+        <div class="map-pin" id="mapPin" hidden><span class="pin-label" id="pinLabel">您在这里</span></div>
+        <div class="map-empty" id="mapEmpty">
+          <p id="mapEmptyText">正在获取定位…</p>
+          <button type="button" class="btn" id="demoLocBtn" hidden>使用演示位置</button>
+        </div>
+      </div>
+      <p class="map-foot">示意地图，非实际比例。绿色圆点为您的位置，虚线圆为定位精度范围；开启定位后会随位置实时更新。</p>
+    </div>
+
+    <!-- 一键紧急求助：整行红色按钮，确认后前端模拟发送 -->
+    <button type="button" class="sos" id="sosBtn">🆘 一键紧急求助</button>
+    <p class="sos-status" id="sosStatus" role="status" hidden></p>
+    <ul class="sos-log" id="sosLog" hidden></ul>
+
+    <h3 class="feed-title">安全播报</h3>
+    <ul class="feed" id="routeFeed" aria-label="安全播报列表"></ul>
+  </section>
+
+  <!-- ================= 模块三：子女代管 ================= -->
+  <section class="module" id="mod-family" aria-labelledby="h-family" hidden>
+    <h2 id="h-family">子女代管</h2>
+    <p class="note">此页面供子女协助老人管理行程，数据为演示用途</p>
+
+    <h3 class="feed-title">行程预订</h3>
+    <form class="form" id="bookForm" novalidate>
+      <div class="field">
+        <label for="scenic">选择景区 <span class="req" aria-hidden="true">*</span></label>
+        <select id="scenic" name="scenic" required aria-describedby="err-scenic">
+          <option value="">请选择景区</option>
+          <option value="西湖苏堤">西湖苏堤</option>
+          <option value="故宫中轴线">故宫中轴线</option>
+          <option value="社区公园">社区公园</option>
+        </select>
+        <p class="err" id="err-scenic" hidden>请选择景区</p>
+      </div>
+
+      <div class="field">
+        <label for="date">出行日期 <span class="req" aria-hidden="true">*</span></label>
+        <input type="date" id="date" name="date" required aria-describedby="err-date">
+        <p class="err" id="err-date" hidden>请选择出行日期</p>
+      </div>
+
+      <div class="field">
+        <label for="people">同行人数</label>
+        <input type="number" id="people" name="people" value="2" min="1" max="10" step="1" inputmode="numeric">
+      </div>
+
+      <div class="check">
+        <input type="checkbox" id="assist" name="assist">
+        <label for="assist">需要无障碍协助（轮椅通道、陪同服务）</label>
+      </div>
+
+      <button type="submit" class="btn primary">提交预订</button>
+      <p class="book-ok" id="bookStatus" role="status" aria-live="polite" hidden></p>
+    </form>
+
+    <h3 class="feed-title">安全播报接收</h3>
+    <ul class="feed" id="familyFeed" aria-label="老人端同步的安全播报"></ul>
+  </section>
+
+  <!-- ================= 模块四：极简模式 ================= -->
+  <section class="module" id="mod-simple" aria-labelledby="h-simple" hidden>
+    <h2 id="h-simple">长辈极简模式</h2>
+    <p class="lead">把页面调到最舒服的样子：字更大、对比更强，还可以直接说想去哪儿。</p>
+
+    <div class="switch-row">
+      <div>
+        <span class="switch-label">开启超大字体</span>
+        <span class="switch-desc">整页字号放大到 24px，四个模块一起变大</span>
+      </div>
+      <button type="button" class="switch" id="fontSwitch" role="switch" aria-checked="false">
+        <span class="track" aria-hidden="true"><span class="knob"></span></span>
+        <span class="switch-text">关闭</span>
+      </button>
+    </div>
+
+    <div class="switch-row">
+      <div>
+        <span class="switch-label">高对比度模式</span>
+        <span class="switch-desc">切换为黑底黄字，弱视或强光下更容易看清</span>
+      </div>
+      <button type="button" class="switch" id="contrastSwitch" role="switch" aria-checked="false">
+        <span class="track" aria-hidden="true"><span class="knob"></span></span>
+        <span class="switch-text">关闭</span>
+      </button>
+    </div>
+
+    <button type="button" class="voice-btn" id="voiceBtn">🎤 语音搜索</button>
+    <p class="voice-msg" id="voiceMsg" role="status" aria-live="polite">点击按钮，说出您想去的地方。</p>
+
+    <label class="field-label" for="voiceOut">识别结果</label>
+    <textarea id="voiceOut" placeholder="识别到的内容会显示在这里"></textarea>
+
+    <p class="hint">语音识别需要 HTTPS 环境，且部分浏览器不支持（例如 Firefox）。建议使用 Chrome 或 Edge，并允许麦克风权限。</p>
+  </section>
+
+  <!-- ================= 模块五：个人中心 ================= -->
+  <section class="module" id="mod-account" aria-labelledby="h-account" hidden>
+    <h2 id="h-account">个人中心</h2>
+    <p class="lead">登录后可以保存常用行程、紧急联系人和无障碍偏好，下次打开不用重新填写。</p>
+
+    <!-- 未登录 -->
+    <div class="account-guest card" id="accountGuest">
+      <h3>还没有登录</h3>
+      <p class="login-lead">用手机号登录，方便保存行程与紧急联系人。演示环境不会真的发送短信。</p>
+      <button type="button" class="btn primary" id="accLoginBtn">登录 / 注册</button>
+      <p class="hint">演示账号：任意 11 位手机号 + 验证码 123456。</p>
+    </div>
+
+    <!-- 已登录 -->
+    <div id="accountUser" hidden>
+      <div class="profile">
+        <div class="avatar" id="accAvatar" aria-hidden="true">旅</div>
+        <div>
+          <h3 id="accName">拾光旅人</h3>
+          <p id="accPhone">—</p>
+          <p class="hint" id="accSince"></p>
+        </div>
+      </div>
+
+      <div class="acc-grid">
+        <section class="acc-card">
+          <h3>紧急联系人</h3>
+          <p>女儿 · 王芳</p>
+          <p id="accContact">138****2233</p>
+          <p class="hint" id="callNote" role="status" hidden></p>
+          <button type="button" class="btn" id="accCall">拨打电话（演示）</button>
+        </section>
+
+        <section class="acc-card">
+          <h3>我的行程</h3>
+          <ul id="accBookings"></ul>
+          <button type="button" class="btn" id="accGoFamily">去预订行程</button>
+        </section>
+
+        <section class="acc-card">
+          <h3>无障碍偏好</h3>
+          <p id="accPref">超大字体：关闭 · 高对比：关闭</p>
+          <button type="button" class="btn" id="accGoSimple">调整偏好</button>
+        </section>
+      </div>
+
+      <button type="button" class="btn" id="logoutBtn">退出登录</button>
+    </div>
+  </section>
+
+</main>
+
+<footer class="foot">
+  拾光出行 · 演示页面。定位与语音识别需要 HTTPS 环境；求助与预订均为前端模拟，不会真的发出短信或订单。
+</footer>
+
+<!-- 求助确认框 -->
+<dialog id="sosDialog" aria-labelledby="sosTitle">
+  <div class="dialog-body">
+    <h2 id="sosTitle">确认发送紧急求助？</h2>
+    <p>将把您当前的位置和求助信息发送给紧急联系人。请确认是否发送。</p>
+    <div class="dialog-actions">
+      <button type="button" class="btn" id="sosCancel">取消</button>
+      <button type="button" class="btn danger" id="sosConfirm">确认发送</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- 登录框 -->
+<dialog id="loginDialog" aria-labelledby="loginTitle">
+  <div class="dialog-body">
+    <p class="login-brand">拾光出行</p>
+    <h2 id="loginTitle">登录 / 注册</h2>
+    <p>用手机号登录，行程和紧急联系人会保存在这台设备上。</p>
+
+    <form class="login-form" id="loginForm" novalidate>
+      <div class="field">
+        <label for="phone">手机号</label>
+        <input type="tel" id="phone" name="phone" inputmode="numeric" maxlength="11" autocomplete="tel" placeholder="请输入 11 位手机号" aria-describedby="phoneErr">
+        <p class="err" id="phoneErr" hidden>请输入 11 位手机号</p>
+      </div>
+
+      <div class="field">
+        <label for="code">验证码</label>
+        <div class="code-row">
+          <input type="text" id="code" name="code" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="6 位验证码" aria-describedby="codeErr loginHint">
+          <button type="button" class="btn" id="sendCode">获取验证码</button>
+        </div>
+        <p class="err" id="codeErr" hidden>验证码不正确（演示验证码：123456）</p>
+        <p class="hint" id="loginHint">演示环境：点击「获取验证码」后，输入 123456 即可登录。</p>
+      </div>
+
+      <div class="login-actions">
+        <button type="submit" class="btn primary">登录</button>
+        <button type="button" class="btn" id="guestBtn">先随便逛逛</button>
+      </div>
+    </form>
+  </div>
+</dialog>
+
+<script>
+(function () {
+  'use strict';
+
+  var root = document.documentElement;
+  var navButtons = Array.prototype.slice.call(document.querySelectorAll('.nav-btn'));
+  var modules = Array.prototype.slice.call(document.querySelectorAll('.module'));
+
+  /* ---------------- 四个模块的导航切换 ---------------- */
+  function showModule(name) {
+    modules.forEach(function (m) {
+      m.hidden = m.id !== 'mod-' + name;
+    });
+    navButtons.forEach(function (b) {
+      var active = b.getAttribute('data-target') === name;
+      b.classList.toggle('is-active', active);
+      if (active) {
+        b.setAttribute('aria-current', 'true');
+      } else {
+        b.removeAttribute('aria-current');
+      }
+    });
+
+    var current = document.getElementById('mod-' + name);
+    var title = current ? current.querySelector('h2') : null;
+    if (title) {
+      title.setAttribute('tabindex', '-1');
+      title.focus({ preventScroll: true });
+    }
+
+    if (name === 'account') {
+      renderAccount();
+    }
+
+    // 第一次进入路线跟踪时自动定位
+    if (name === 'route' && !locatedOnce) {
+      locatedOnce = true;
+      locate();
+    }
+  }
+
+  navButtons.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      showModule(btn.getAttribute('data-target'));
+    });
+  });
+
+  /* ---------------- 场景卡片的“查看详情” ---------------- */
+  Array.prototype.forEach.call(document.querySelectorAll('[data-detail-btn]'), function (btn) {
+    btn.addEventListener('click', function () {
+      var panel = document.getElementById(btn.getAttribute('aria-controls'));
+      if (!panel) return;
+      var willOpen = panel.hidden;
+      panel.hidden = !willOpen;
+      btn.setAttribute('aria-expanded', String(willOpen));
+      btn.textContent = willOpen ? '收起详情' : '查看详情';
+    });
+  });
+
+  /* ---------------- 时间格式化 ---------------- */
+  function pad(n) { return n < 10 ? '0' + n : String(n); }
+  function clock(d) { return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+  function fullTime(d) {
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) +
+      ' ' + clock(d) + ':' + pad(d.getSeconds());
+  }
+
+  /* ---------------- 当前位置与地图：watchPosition 实时更新 ---------------- */
+  var locatedOnce = false;
+  var locStatus = document.getElementById('locStatus');
+  var latEl = document.getElementById('lat');
+  var lngEl = document.getElementById('lng');
+  var mapPin = document.getElementById('mapPin');
+  var mapAcc = document.getElementById('mapAcc');
+  var mapTrail = document.getElementById('mapTrail');
+  var mapBadge = document.getElementById('mapBadge');
+  var mapEmpty = document.getElementById('mapEmpty');
+  var mapEmptyText = document.getElementById('mapEmptyText');
+  var demoLocBtn = document.getElementById('demoLocBtn');
+  var pinLabel = document.getElementById('pinLabel');
+
+  var watchId = null;
+  var origin = null;
+  var trailPts = [];
+
+  function stopWatch() {
+    if (watchId !== null && navigator.geolocation) {
+      navigator.geolocation.clearWatch(watchId);
+    }
+    watchId = null;
+  }
+
+  function setLocError(message) {
+    locStatus.textContent = message;
+    locStatus.classList.add('is-error');
+    latEl.textContent = '—';
+    lngEl.textContent = '—';
+    mapPin.hidden = true;
+    mapBadge.textContent = '定位失败';
+  }
+
+  function clamp(v, min, max) {
+    return Math.min(max, Math.max(min, v));
+  }
+
+  function setPin(px, py) {
+    mapPin.style.left = (px / 720 * 100) + '%';
+    mapPin.style.top = (py / 440 * 100) + '%';
+    // 圆点在地图下半部时，文字改放上方，避免贴到地图边缘外
+    pinLabel.classList.toggle('pin-label-up', py > 330);
+    mapPin.hidden = false;
+  }
+
+  // 把一次定位结果显示在坐标区与地图上；isDemo 表示演示位置。
+  function applyFix(lat, lng, accuracy, isDemo) {
+    latEl.textContent = lat.toFixed(6);
+    lngEl.textContent = lng.toFixed(6);
+    mapEmpty.hidden = true;
+    demoLocBtn.hidden = true;
+    pinLabel.textContent = isDemo ? '演示位置' : '您在这里';
+
+    if (!origin) origin = { lat: lat, lng: lng };
+
+    // 以第一次定位为地图中心，按 1 像素约 2 米换算位移
+    var dx = (lng - origin.lng) * 111320 * Math.cos(lat * Math.PI / 180);
+    var dy = -(lat - origin.lat) * 110540;
+    var px = clamp(360 + dx / 2, 64, 656);
+    var py = clamp(220 + dy / 2, 48, 392);
+
+    setPin(px, py);
+
+    // 定位精度圈
+    var r = clamp(accuracy / 2, 8, 150);
+    mapAcc.setAttribute('cx', px.toFixed(1));
+    mapAcc.setAttribute('cy', py.toFixed(1));
+    mapAcc.setAttribute('r', r.toFixed(1));
+    mapAcc.setAttribute('visibility', isDemo ? 'hidden' : 'visible');
+
+    // 移动轨迹
+    var last = trailPts[trailPts.length - 1];
+    if (!last || Math.abs(last[0] - px) > 0.5 || Math.abs(last[1] - py) > 0.5) {
+      trailPts.push([px, py]);
+    }
+    mapTrail.setAttribute('points', trailPts.map(function (p) {
+      return p[0].toFixed(1) + ',' + p[1].toFixed(1);
+    }).join(' '));
+    mapTrail.setAttribute('visibility', trailPts.length < 2 ? 'hidden' : 'visible');
+  }
+
+  function onPosition(pos) {
+    if (!pos || !pos.coords) return;
+    var lat = pos.coords.latitude;
+    var lng = pos.coords.longitude;
+    var accuracy = pos.coords.accuracy || 20;
+
+    applyFix(lat, lng, accuracy, false);
+    locStatus.classList.remove('is-error');
+    mapBadge.textContent = '实时定位中';
+    locStatus.textContent = '实时定位中 · 最后更新 ' + clock(new Date()) +
+      ' · 精度约 ' + Math.round(accuracy) + ' 米';
+  }
+
+  function onLocError(err) {
+    // 不停止 watch：定位信号偶尔丢失（例如切换基站、页面切到后台）时
+    // 浏览器会先抛一次 POSITION_UNAVAILABLE，但监听仍然有效，
+    // 下一条位置到达后会自动恢复。若停表，新的位置就再也收不到了。
+    var hadFix = latEl.textContent !== '—' && latEl.textContent !== '';
+    if (hadFix) {
+      // 已经有位置时，短暂波动不必擦掉地图上的标识，等下一次定位自动刷新。
+      return;
+    }
+    var msg = '定位失败，请稍后再试。';
+    if (err && err.code === 1) {
+      msg = '定位权限被拒绝。请在浏览器地址栏允许定位后重试。';
+    } else if (err && err.code === 2) {
+      msg = '暂时无法获取位置，请到信号较好的地方再试。';
+    } else if (err && err.code === 3) {
+      msg = '定位超时，请重试。';
+    }
+    setLocError(msg);
+    mapEmpty.hidden = false;
+    mapEmptyText.textContent = '暂时没有位置信息。可以重试，或先用演示位置看看地图效果。';
+    demoLocBtn.hidden = false;
+  }
+
+  function locate() {
+    locStatus.classList.remove('is-error');
+    locStatus.textContent = '正在获取定位…';
+    latEl.textContent = '—';
+    lngEl.textContent = '—';
+
+    origin = null;
+    trailPts = [];
+    mapTrail.setAttribute('points', '');
+    mapTrail.setAttribute('visibility', 'hidden');
+    mapAcc.setAttribute('r', '0');
+    mapAcc.setAttribute('visibility', 'hidden');
+    mapPin.hidden = true;
+    mapBadge.textContent = '等待定位';
+    mapEmpty.hidden = false;
+    mapEmptyText.textContent = '正在获取定位…';
+    demoLocBtn.hidden = true;
+
+    if (!('geolocation' in navigator)) {
+      setLocError('当前浏览器不支持定位功能。');
+      mapEmptyText.textContent = '当前浏览器不支持定位功能，可以先看演示位置。';
+      demoLocBtn.hidden = false;
+      return;
+    }
+
+    stopWatch();
+    // watchPosition 会持续推送新位置，实现“实时定位”；需要 HTTPS 或 localhost。
+    watchId = navigator.geolocation.watchPosition(onPosition, onLocError, {
+      enableHighAccuracy: true,
+      timeout: 15000,
+      maximumAge: 5000
+    });
+  }
+
+  document.getElementById('locateBtn').addEventListener('click', locate);
+
+  // 演示位置：没有定位权限时也能看到地图与位置标识（明确标注为演示）。
+  demoLocBtn.addEventListener('click', function () {
+    stopWatch();
+    origin = null;
+    trailPts = [];
+    mapTrail.setAttribute('points', '');
+    mapTrail.setAttribute('visibility', 'hidden');
+    mapAcc.setAttribute('r', '0');
+    mapAcc.setAttribute('visibility', 'hidden');
+    mapBadge.textContent = '演示位置';
+    locStatus.classList.remove('is-error');
+    locStatus.textContent = '演示位置 · 坐标与轨迹为示例数据，不是真实定位。';
+    applyFix(30.274085, 120.155070, 20, true);
+  });
+
+  /* ---------------- 一键紧急求助（前端模拟） ---------------- */
+  var sosBtn = document.getElementById('sosBtn');
+  var sosDialog = document.getElementById('sosDialog');
+  var sosStatus = document.getElementById('sosStatus');
+  var sosLog = document.getElementById('sosLog');
+
+  sosBtn.addEventListener('click', function () {
+    if (typeof sosDialog.showModal === 'function') {
+      sosDialog.showModal();
+    } else if (window.confirm('确认发送紧急求助？将把位置和求助信息发送给紧急联系人。')) {
+      sendSOS();
+    }
+  });
+
+  document.getElementById('sosCancel').addEventListener('click', function () {
+    sosDialog.close();
+  });
+
+  document.getElementById('sosConfirm').addEventListener('click', function () {
+    sosDialog.close();
+    sendSOS();
+  });
+
+  // 演示用：只在前端记录时间并展示提示，不会真的发送短信或推送。
+  // 真实场景需要接入短信网关、推送服务或 110/120 联动平台。
+  function sendSOS() {
+    var now = new Date();
+    var text = '求助信号已发送，已通知紧急联系人';
+    sosStatus.hidden = false;
+    sosStatus.textContent = '✅ ' + text + '（' + fullTime(now) + '）';
+
+    sosLog.hidden = false;
+    var li = document.createElement('li');
+    li.textContent = '求助记录：' + fullTime(now) + ' · 已通知紧急联系人';
+    sosLog.insertBefore(li, sosLog.firstChild);
+  }
+
+  /* ---------------- 两个列表：安全播报 ---------------- */
+  function minutesAgo(min) {
+    return new Date(Date.now() - min * 60 * 1000);
+  }
+
+  function renderFeed(listEl, items) {
+    listEl.textContent = '';
+    items.forEach(function (item) {
+      var d = minutesAgo(item.minutes);
+      var li = document.createElement('li');
+      li.className = 'feed-item state-' + item.state;
+
+      var main = document.createElement('div');
+      main.className = 'f-main';
+      var text = document.createElement('p');
+      text.className = 'f-text';
+      text.textContent = item.text;
+      main.appendChild(text);
+
+      var meta = document.createElement('div');
+      meta.className = 'f-meta';
+      var pill = document.createElement('span');
+      pill.className = 'state-pill state-pill-' + item.state;
+      pill.textContent = item.tag;
+      var time = document.createElement('time');
+      time.dateTime = d.toISOString();
+      time.textContent = '今天 ' + clock(d);
+      meta.appendChild(pill);
+      meta.appendChild(time);
+
+      li.appendChild(main);
+      li.appendChild(meta);
+      listEl.appendChild(li);
+    });
+  }
+
+  renderFeed(document.getElementById('routeFeed'), [
+    { minutes: 3,  state: 'ok',    tag: '正常', text: '已进入景区范围，位于苏堤南入口。' },
+    { minutes: 26, state: 'warn',  tag: '提醒', text: '已休息 10 分钟，心率平稳。' },
+    { minutes: 58, state: 'alert', tag: '警告', text: '偏离推荐路线约 80 米，请注意。' }
+  ]);
+
+  renderFeed(document.getElementById('familyFeed'), [
+    { minutes: 5,  state: 'ok',   tag: '正常', text: '老人已进入西湖苏堤景区，定位正常。' },
+    { minutes: 33, state: 'ok',   tag: '正常', text: '在压堤桥长椅休息 10 分钟，心率 76。' },
+    { minutes: 61, state: 'warn', tag: '注意', text: '步速比平时慢，建议电话关心一下。' }
+  ]);
+
+  /* ---------------- 子女代管：前端校验与提交 ---------------- */
+  var bookForm = document.getElementById('bookForm');
+  var scenicEl = document.getElementById('scenic');
+  var dateEl = document.getElementById('date');
+  var peopleEl = document.getElementById('people');
+  var assistEl = document.getElementById('assist');
+  var bookStatus = document.getElementById('bookStatus');
+
+  function setFieldError(input, errEl, hasError) {
+    errEl.hidden = !hasError;
+    input.setAttribute('aria-invalid', hasError ? 'true' : 'false');
+  }
+
+  bookForm.addEventListener('submit', function (event) {
+    event.preventDefault();
+    var scenicOk = scenicEl.value !== '';
+    var dateOk = dateEl.value !== '';
+
+    setFieldError(scenicEl, document.getElementById('err-scenic'), !scenicOk);
+    setFieldError(dateEl, document.getElementById('err-date'), !dateOk);
+
+    if (!scenicOk) { scenicEl.focus(); return; }
+    if (!dateOk) { dateEl.focus(); return; }
+
+    var people = parseInt(peopleEl.value, 10);
+    if (isNaN(people) || people < 1) people = 1;
+    if (people > 10) people = 10;
+    peopleEl.value = String(people);
+
+    var assistText = assistEl.checked ? '需要无障碍协助' : '无需无障碍协助';
+    bookStatus.hidden = false;
+    bookStatus.textContent = '✅ 预订已提交（前端模拟）：' + scenicEl.value + ' · ' +
+      dateEl.value + ' · ' + people + ' 人 · ' + assistText;
+
+    // 保存行程，登录后可在个人中心查看
+    var bookings = loadBookings();
+    bookings.push({
+      scenic: scenicEl.value,
+      date: dateEl.value,
+      people: people,
+      assist: assistEl.checked,
+      created: fullTime(new Date())
+    });
+    saveBookings(bookings);
+    renderAccount();
+  });
+
+  // 用户修改时清掉对应的错误提示
+  bookForm.addEventListener('input', function (event) {
+    if (event.target === scenicEl) {
+      setFieldError(scenicEl, document.getElementById('err-scenic'), false);
+    }
+    if (event.target === dateEl) {
+      setFieldError(dateEl, document.getElementById('err-date'), false);
+    }
+  });
+
+  /* ---------------- 个人中心与登录（前端模拟） ---------------- */
+  var user = null;
+  try {
+    user = JSON.parse(localStorage.getItem('sg-user') || 'null');
+  } catch (e) {
+    user = null;
+  }
+
+  var accountGuest = document.getElementById('accountGuest');
+  var accountUser = document.getElementById('accountUser');
+  var accPhone = document.getElementById('accPhone');
+  var accSince = document.getElementById('accSince');
+  var accBookings = document.getElementById('accBookings');
+  var accPref = document.getElementById('accPref');
+
+  var loginDialog = document.getElementById('loginDialog');
+  var loginForm = document.getElementById('loginForm');
+  var phoneInput = document.getElementById('phone');
+  var codeInput = document.getElementById('code');
+  var phoneErr = document.getElementById('phoneErr');
+  var codeErr = document.getElementById('codeErr');
+  var loginHint = document.getElementById('loginHint');
+  var sendCodeBtn = document.getElementById('sendCode');
+  var codeTimer = null;
+
+  function maskPhone(p) {
+    return String(p).replace(/^(\d{3})\d{4}(\d{4})$/, '$1****$2');
+  }
+
+  function todayStamp() {
+    var d = new Date();
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  }
+
+  function loadBookings() {
+    try {
+      return JSON.parse(localStorage.getItem('sg-bookings') || '[]') || [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveBookings(list) {
+    try {
+      localStorage.setItem('sg-bookings', JSON.stringify(list));
+    } catch (e) {
+      /* 存储不可用时只保存在本次会话 */
+    }
+  }
+
+  function saveUser() {
+    try {
+      localStorage.setItem('sg-user', JSON.stringify(user));
+    } catch (e) {
+      /* 忽略存储失败 */
+    }
+  }
+
+  function updatePrefs() {
+    if (!accPref) return;
+    var big = root.style.fontSize === '24px';
+    var hc = root.classList.contains('hc');
+    accPref.textContent = '超大字体：' + (big ? '已开启' : '关闭') +
+      ' · 高对比：' + (hc ? '已开启' : '关闭');
+  }
+
+  function renderAccount() {
+    var logged = Boolean(user && user.phone);
+    accountGuest.hidden = logged;
+    accountUser.hidden = !logged;
+    if (!logged) return;
+
+    accPhone.textContent = maskPhone(user.phone);
+    accSince.textContent = '加入时间：' + (user.since || todayStamp());
+
+    var list = loadBookings();
+    accBookings.textContent = '';
+    if (!list.length) {
+      var empty = document.createElement('li');
+      empty.textContent = '还没有预订记录';
+      accBookings.appendChild(empty);
+    } else {
+      list.slice(-6).reverse().forEach(function (b) {
+        var li = document.createElement('li');
+        li.textContent = b.scenic + ' · ' + b.date + ' · ' + b.people + ' 人' +
+          (b.assist ? ' · 需无障碍协助' : '');
+        accBookings.appendChild(li);
+      });
+    }
+    updatePrefs();
+  }
+
+  function openLogin() {
+    phoneErr.hidden = true;
+    codeErr.hidden = true;
+    loginHint.textContent = '演示环境：点击「获取验证码」后，输入 123456 即可登录。';
+    accountGuest.querySelector('h3').textContent = '还没有登录';
+    if (typeof loginDialog.showModal === 'function') {
+      loginDialog.showModal();
+    } else {
+      loginDialog.setAttribute('open', '');
+    }
+    phoneInput.focus();
+  }
+
+  document.getElementById('accLoginBtn').addEventListener('click', openLogin);
+
+  document.getElementById('guestBtn').addEventListener('click', function () {
+    if (typeof loginDialog.close === 'function') loginDialog.close();
+    else loginDialog.removeAttribute('open');
+    showModule('preview');
+  });
+
+  phoneInput.addEventListener('input', function () {
+    phoneInput.value = phoneInput.value.replace(/\D/g, '').slice(0, 11);
+    phoneErr.hidden = true;
+  });
+
+  codeInput.addEventListener('input', function () {
+    codeInput.value = codeInput.value.replace(/\D/g, '').slice(0, 6);
+    codeErr.hidden = true;
+  });
+
+  sendCodeBtn.addEventListener('click', function () {
+    if (!/^1\d{10}$/.test(phoneInput.value)) {
+      phoneErr.hidden = false;
+      phoneInput.focus();
+      return;
+    }
+    phoneErr.hidden = true;
+    loginHint.textContent = '演示验证码：123456，60 秒内有效（不会真的发送短信）。';
+    var left = 60;
+    sendCodeBtn.disabled = true;
+    sendCodeBtn.textContent = left + ' 秒后重发';
+    if (codeTimer) clearInterval(codeTimer);
+    codeTimer = setInterval(function () {
+      left -= 1;
+      if (left <= 0) {
+        clearInterval(codeTimer);
+        codeTimer = null;
+        sendCodeBtn.disabled = false;
+        sendCodeBtn.textContent = '获取验证码';
+      } else {
+        sendCodeBtn.textContent = left + ' 秒后重发';
+      }
+    }, 1000);
+  });
+
+  loginForm.addEventListener('submit', function (event) {
+    event.preventDefault();
+    var phoneVal = phoneInput.value;
+    var codeVal = codeInput.value;
+    var phoneOk = /^1\d{10}$/.test(phoneVal);
+    var codeOk = codeVal === '123456';
+
+    phoneErr.hidden = phoneOk;
+    codeErr.hidden = codeOk;
+
+    if (!phoneOk) { phoneInput.focus(); return; }
+    if (!codeOk) { codeInput.focus(); return; }
+
+    user = { phone: phoneVal, since: todayStamp() };
+    saveUser();
+    renderAccount();
+    if (typeof loginDialog.close === 'function') loginDialog.close();
+    else loginDialog.removeAttribute('open');
+    showModule('account');
+  });
+
+  document.getElementById('accGoFamily').addEventListener('click', function () {
+    showModule('family');
+  });
+
+  document.getElementById('accGoSimple').addEventListener('click', function () {
+    showModule('simple');
+  });
+
+  document.getElementById('accCall').addEventListener('click', function () {
+    var note = document.getElementById('callNote');
+    note.hidden = false;
+    note.textContent = '演示：将拨打女儿 138****2233，不会真的呼叫。';
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', function () {
+    user = null;
+    try {
+      localStorage.removeItem('sg-user');
+    } catch (e) {
+      /* 忽略 */
+    }
+    renderAccount();
+    accountGuest.querySelector('h3').textContent = '已退出登录';
+  });
+
+  renderAccount();
+
+  /* ---------------- 极简模式：超大字体 ---------------- */
+  var fontSwitch = document.getElementById('fontSwitch');
+
+  function applyFont(big) {
+    // 根字号 18px ↔ 24px，全站 rem 尺寸同步放大
+    root.style.fontSize = big ? '24px' : '18px';
+    fontSwitch.setAttribute('aria-checked', String(big));
+    fontSwitch.querySelector('.switch-text').textContent = big ? '已开启' : '关闭';
+    updatePrefs();
+  }
+
+  fontSwitch.addEventListener('click', function () {
+    applyFont(fontSwitch.getAttribute('aria-checked') !== 'true');
+  });
+
+  /* ---------------- 极简模式：高对比度 ---------------- */
+  var contrastSwitch = document.getElementById('contrastSwitch');
+
+  function applyContrast(on) {
+    root.classList.toggle('hc', on);
+    contrastSwitch.setAttribute('aria-checked', String(on));
+    contrastSwitch.querySelector('.switch-text').textContent = on ? '已开启' : '关闭';
+    updatePrefs();
+  }
+
+  contrastSwitch.addEventListener('click', function () {
+    applyContrast(contrastSwitch.getAttribute('aria-checked') !== 'true');
+  });
+
+  /* ---------------- 极简模式：语音搜索 ---------------- */
+  // 语音识别需要 HTTPS 环境，且部分浏览器（Firefox、部分旧版 Safari）不支持。
+  var voiceBtn = document.getElementById('voiceBtn');
+  var voiceMsg = document.getElementById('voiceMsg');
+  var voiceOut = document.getElementById('voiceOut');
+  var recognition = null;
+  var listening = false;
+
+  function setVoiceMsg(text, isError) {
+    voiceMsg.textContent = text;
+    voiceMsg.classList.toggle('is-error', Boolean(isError));
+  }
+
+  voiceBtn.addEventListener('click', function () {
+    var SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognitionCtor) {
+      setVoiceMsg('当前浏览器不支持语音搜索，请使用 Chrome 或 Edge', true);
+      return;
+    }
+
+    if (listening && recognition) {
+      recognition.stop();
+      return;
+    }
+
+    try {
+      recognition = new SpeechRecognitionCtor();
+      recognition.lang = 'zh-CN';
+      recognition.interimResults = true;
+      recognition.continuous = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onstart = function () {
+        listening = true;
+        voiceBtn.classList.add('is-listening');
+        voiceBtn.textContent = '🎤 正在聆听…（点击停止）';
+        setVoiceMsg('请对着麦克风说话，例如“我想去西湖”。');
+      };
+
+      recognition.onresult = function (event) {
+        var text = '';
+        for (var i = event.resultIndex; i < event.results.length; i++) {
+          text += event.results[i][0].transcript;
+        }
+        voiceOut.value = text.trim();
+        setVoiceMsg('已识别，可继续点击按钮再说一次。');
+      };
+
+      recognition.onerror = function (event) {
+        var map = {
+          'not-allowed': '麦克风权限被拒绝，请在浏览器设置中允许后重试。',
+          'service-not-allowed': '麦克风权限被拒绝，请在浏览器设置中允许后重试。',
+          'network': '语音服务连接失败，请检查网络后重试。',
+          'no-speech': '没有听到声音，请再说一次。',
+          'audio-capture': '没有检测到麦克风，请检查设备后重试。'
+        };
+        setVoiceMsg(map[event.error] || '语音识别出错，请重试。', true);
+      };
+
+      recognition.onend = function () {
+        listening = false;
+        voiceBtn.classList.remove('is-listening');
+        voiceBtn.textContent = '🎤 语音搜索';
+      };
+
+      recognition.start();
+    } catch (err) {
+      listening = false;
+      voiceBtn.classList.remove('is-listening');
+      voiceBtn.textContent = '🎤 语音搜索';
+      setVoiceMsg('语音识别启动失败，请检查麦克风权限，或改用 Chrome / Edge。', true);
+    }
+  });
+})();
+</script>
+</body>
+</html>
