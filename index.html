@@ -293,6 +293,7 @@
     font-size: 1rem;
     font-weight: 600;
     text-align: center;
+    text-decoration: none;
     color: var(--ink);
     background: var(--panel);
     border: 2px solid var(--line);
@@ -394,6 +395,124 @@
   .state-pill-alert { color: #8f1d16; background: #fdecea; border-color: #f4bdb8; }
   html.hc .state-pill { color: #ffe600; background: #000; border-color: #ffe600; }
 
+  /* ---------- 今日路线进度 ---------- */
+  .route-card {
+    margin-top: 1.2rem;
+    padding: 1.1rem;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+  }
+  html.hc .route-card { border-width: 2px; }
+  .route-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: .6rem 1rem;
+  }
+  .route-kicker {
+    color: var(--ink-2);
+    font-weight: 700;
+    letter-spacing: .04em;
+  }
+  .route-head h3 { margin-top: .15rem; font-size: 1.35rem; }
+  .route-state {
+    flex: none;
+    padding: .15rem .7rem;
+    font-weight: 700;
+    color: #1c5b2a;
+    background: #e6f4e6;
+    border: 1px solid #bfe0c2;
+    border-radius: 999px;
+  }
+  html.hc .route-state { color: #ffe600; background: #000; border-color: #ffe600; }
+
+  .route-progress { margin-top: 1rem; }
+  .route-bar {
+    height: 14px;
+    overflow: hidden;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+  }
+  .route-bar span {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, #2e7d5b, #56a47c);
+    border-radius: 999px;
+    transition: width .8s ease;
+  }
+  html.hc .route-bar { background: #000; border-color: #ffe600; }
+  html.hc .route-bar span { background: #ffe600; }
+  .route-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: .25rem .8rem;
+    margin-top: .55rem;
+  }
+  .route-meta strong {
+    font-size: 1.6rem;
+    line-height: 1.1;
+    color: var(--green);
+    font-variant-numeric: tabular-nums;
+  }
+  html.hc .route-meta strong { color: #ffe600; }
+  .route-meta span { color: var(--ink-2); }
+
+  .stops {
+    display: grid;
+    gap: .5rem;
+    margin: 1.1rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .stop {
+    display: flex;
+    align-items: center;
+    gap: .7rem;
+    padding: .45rem .6rem;
+    border-radius: 10px;
+  }
+  .stop-dot {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    font-size: .95rem;
+    font-weight: 800;
+    color: var(--ink-2);
+    background: var(--bg);
+    border: 2px solid var(--line);
+    border-radius: 50%;
+  }
+  .stop.is-done .stop-dot { color: #ffffff; background: var(--green); border-color: var(--green); }
+  .stop.is-now { background: var(--green-soft); }
+  .stop.is-now .stop-dot {
+    color: var(--green);
+    background: #ffffff;
+    border-color: var(--green);
+    box-shadow: 0 0 0 4px rgba(23, 92, 67, .14);
+  }
+  html.hc .stop-dot { color: #ffe600; background: #000; border-color: #ffe600; }
+  html.hc .stop.is-done .stop-dot { color: #000000; background: #ffe600; border-color: #ffe600; }
+  html.hc .stop.is-now { background: rgba(255, 230, 0, .12); }
+  html.hc .stop.is-now .stop-dot { color: #ffe600; background: #000; border-color: #ffe600; }
+  .stop-name { font-weight: 700; }
+  .stop-time {
+    margin-left: auto;
+    color: var(--ink-2);
+    font-variant-numeric: tabular-nums;
+  }
+  @media (min-width: 620px) {
+    .stops { grid-template-columns: repeat(4, 1fr); gap: .6rem; }
+    .stop { flex-direction: column; gap: .2rem; padding: .7rem .4rem; text-align: center; }
+    .stop-time { margin-left: 0; font-size: .95rem; }
+  }
+
   /* ---------- 路线地图 ---------- */
   .map-card {
     margin-top: 1.2rem;
@@ -490,22 +609,26 @@
 
   .map-empty {
     position: absolute;
-    inset: 0;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
     z-index: 4;
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
     align-items: center;
-    justify-content: center;
-    gap: .7rem;
-    padding: 1.2rem;
+    justify-content: space-between;
+    gap: .6rem 1rem;
+    padding: .8rem 1rem;
     font-weight: 700;
-    text-align: center;
-    background: rgba(245, 243, 236, .9);
+    background: rgba(255, 255, 255, .96);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    box-shadow: 0 6px 18px rgba(20, 33, 28, .14);
   }
   .map-empty[hidden] { display: none; }
-  .map-empty p { margin: 0; }
-  html.hc .map-empty { background: rgba(0, 0, 0, .9); }
-  .map-empty .btn { min-height: 48px; }
+  .map-empty p { flex: 1 1 12rem; margin: 0; }
+  html.hc .map-empty { background: rgba(0, 0, 0, .94); border-color: #ffe600; }
+  .map-empty .btn { min-height: 44px; }
   .map-foot { padding: .6rem 1.1rem 1rem; color: var(--ink-2); }
 
   @keyframes pin-pulse {
@@ -626,17 +749,65 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 4rem;
-    height: 4rem;
+    width: 4.4rem;
+    height: 4.4rem;
+    padding: 0;
+    overflow: hidden;
     font-size: 1.5rem;
     font-weight: 800;
     color: #ffffff;
     background: var(--green);
+    border: 3px solid #ffffff;
     border-radius: 50%;
+    box-shadow: 0 6px 16px rgba(20, 33, 28, .18);
   }
-  html.hc .avatar { color: #000000; background: #ffe600; }
+  .avatar svg { display: block; width: 100%; height: 100%; }
+  .avatar-btn { cursor: pointer; }
+  .avatar-btn:hover { box-shadow: 0 8px 20px rgba(20, 33, 28, .26); }
+  html.hc .avatar { color: #000000; background: #ffe600; border-color: #ffe600; }
   .profile h3 { font-size: 1.25rem; }
   .profile p { color: var(--ink-2); }
+  .profile-info { display: grid; gap: .15rem; }
+  .link-btn {
+    justify-self: start;
+    min-height: 44px;
+    padding: .2rem 0;
+    font-size: .95rem;
+    font-weight: 700;
+    color: var(--green);
+    background: none;
+    border: 0;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  html.hc .link-btn { color: #ffe600; }
+  .avatar-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(5.4rem, 1fr));
+    gap: .7rem;
+    margin: 1rem 0 .4rem;
+  }
+  .avatar-opt {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .45rem;
+    padding: .7rem .4rem;
+    font: inherit;
+    font-weight: 700;
+    color: var(--ink);
+    background: var(--panel);
+    border: 2px solid var(--line);
+    border-radius: 14px;
+    cursor: pointer;
+  }
+  .avatar-opt:hover { border-color: var(--green); }
+  .avatar-opt.is-on {
+    border-color: var(--green);
+    box-shadow: 0 0 0 3px rgba(23, 92, 67, .16);
+  }
+  html.hc .avatar-opt { color: #ffe600; background: #000; border-color: #ffe600; }
+  .avatar-opt .avatar { width: 3.6rem; height: 3.6rem; }
 
   .acc-grid {
     display: grid;
@@ -932,59 +1103,175 @@
       <p class="hint">定位需要 HTTPS 或 localhost 环境；如果直接在本地双击打开文件，浏览器可能拒绝授权。换到 http://localhost 或线上 HTTPS 地址即可正常获取。</p>
     </div>
 
-    <!-- 位置地图：示意图 + 实时位置标识 -->
+    <!-- 今日路线进度 -->
+    <div class="route-card" id="routeCard">
+      <div class="route-head">
+        <div>
+          <p class="route-kicker">今日路线 · 苏堤漫步</p>
+          <h3>苏堤春晓 → 雷峰夕照</h3>
+        </div>
+        <span class="route-state">进行中</span>
+      </div>
+      <div class="route-progress" role="progressbar" aria-valuenow="61" aria-valuemin="0" aria-valuemax="100" aria-valuetext="已完成 61%，已走 2.8 公里" aria-label="今日路线完成度">
+        <div class="route-bar"><span id="routeBar" style="width:61%"></span></div>
+        <div class="route-meta">
+          <strong id="routePct">61%</strong>
+          <span>已走 2.8 公里 · 剩余 1.8 公里 · 约 35 分钟</span>
+        </div>
+      </div>
+      <ol class="stops" aria-label="今日路线站点">
+        <li class="stop is-done">
+          <span class="stop-dot" aria-hidden="true">✓</span>
+          <span class="stop-name">苏堤春晓</span>
+          <span class="stop-time">07:20 到达</span>
+        </li>
+        <li class="stop is-done">
+          <span class="stop-dot" aria-hidden="true">✓</span>
+          <span class="stop-name">平湖秋月</span>
+          <span class="stop-time">07:55 到达</span>
+        </li>
+        <li class="stop is-now">
+          <span class="stop-dot" aria-hidden="true">3</span>
+          <span class="stop-name">花港观鱼</span>
+          <span class="stop-time">正在前往 · 900 米</span>
+        </li>
+        <li class="stop">
+          <span class="stop-dot" aria-hidden="true">4</span>
+          <span class="stop-name">雷峰夕照</span>
+          <span class="stop-time">预计 09:30</span>
+        </li>
+      </ol>
+    </div>
+
+    <!-- 实时位置地图 -->
     <div class="map-card">
       <div class="map-head">
-        <h3>位置地图</h3>
+        <h3>实时位置地图</h3>
         <span class="map-badge" id="mapBadge">等待定位</span>
       </div>
       <div class="map" id="mapWrap">
         <svg viewBox="0 0 720 440" aria-hidden="true" focusable="false">
+          <defs>
+            <linearGradient id="mgWater" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#d6ebf1" />
+              <stop offset="1" stop-color="#b2d8e4" />
+            </linearGradient>
+            <linearGradient id="mgPark" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#e3f0d9" />
+              <stop offset="1" stop-color="#d2e6c2" />
+            </linearGradient>
+          </defs>
+
           <rect width="720" height="440" fill="#eef4e6" />
-          <ellipse cx="110" cy="80" rx="170" ry="100" fill="#dcecd0" />
-          <ellipse cx="640" cy="390" rx="190" ry="120" fill="#d9ebcc" />
-          <ellipse cx="300" cy="410" rx="170" ry="80" fill="#e2f0d8" />
-          <ellipse cx="520" cy="300" rx="150" ry="78" fill="#cfe6f0" />
-          <ellipse cx="520" cy="300" rx="150" ry="78" fill="none" stroke="#a9cfdd" stroke-width="3" />
-          <path d="M420 296 q30 -14 60 0 t60 0" fill="none" stroke="#a9cfdd" stroke-width="3" stroke-linecap="round" />
-          <path d="M452 322 q25 -12 50 0 t50 0" fill="none" stroke="#a9cfdd" stroke-width="3" stroke-linecap="round" />
+          <ellipse cx="110" cy="80" rx="180" ry="105" fill="url(#mgPark)" />
+          <ellipse cx="640" cy="392" rx="200" ry="125" fill="url(#mgPark)" />
+          <ellipse cx="300" cy="420" rx="180" ry="85" fill="#e4f0da" />
 
-          <path d="M70 150 C 190 70 430 60 600 130 C 690 175 660 320 540 350 C 380 390 170 360 90 270 Z" fill="none" stroke="#f2e7d3" stroke-width="30" stroke-linecap="round" />
-          <path d="M70 150 C 190 70 430 60 600 130 C 690 175 660 320 540 350 C 380 390 170 360 90 270 Z" fill="none" stroke="#ffffff" stroke-width="2" stroke-dasharray="10 12" stroke-linecap="round" />
-          <path d="M250 110 L 300 340" fill="none" stroke="#f2e7d3" stroke-width="16" stroke-linecap="round" />
-          <path d="M430 95 L 470 200" fill="none" stroke="#f2e7d3" stroke-width="16" stroke-linecap="round" />
-          <path d="M600 130 L 560 250" fill="none" stroke="#f2e7d3" stroke-width="16" stroke-linecap="round" />
+          <!-- 湖面 -->
+          <path d="M470 212 C520 186 604 192 648 238 C694 288 668 352 602 372 C538 392 470 366 452 318 C438 280 442 238 470 212 Z" fill="url(#mgWater)" stroke="#9ec9d6" stroke-width="3" />
+          <path d="M480 250 q26 -10 52 0 t52 0" fill="none" stroke="#eefafd" stroke-width="3" stroke-linecap="round" opacity=".9" />
+          <path d="M500 292 q24 -9 48 0 t48 0" fill="none" stroke="#eefafd" stroke-width="3" stroke-linecap="round" opacity=".8" />
+          <path d="M486 332 q20 -8 40 0 t40 0" fill="none" stroke="#eefafd" stroke-width="2.5" stroke-linecap="round" opacity=".7" />
 
-          <rect x="55" y="35" width="96" height="58" rx="8" fill="#e6dfd2" stroke="#cdc4b2" stroke-width="2" />
-          <rect x="600" y="32" width="78" height="72" rx="8" fill="#e6dfd2" stroke="#cdc4b2" stroke-width="2" />
-          <rect x="72" y="330" width="86" height="62" rx="8" fill="#e6dfd2" stroke="#cdc4b2" stroke-width="2" />
+          <!-- 苏堤 -->
+          <path d="M446 250 C510 268 570 296 644 338" fill="none" stroke="#e9dfcb" stroke-width="30" stroke-linecap="round" />
+          <path d="M446 250 C510 268 570 296 644 338" fill="none" stroke="#fffdf8" stroke-width="20" stroke-linecap="round" />
+          <path d="M446 250 C510 268 570 296 644 338" fill="none" stroke="#d9c9ab" stroke-width="2" stroke-dasharray="10 12" stroke-linecap="round" />
+          <path d="M538 280 q16 -10 32 -2" fill="none" stroke="#e9dfcb" stroke-width="13" stroke-linecap="round" />
+          <path d="M538 280 q16 -10 32 -2" fill="none" stroke="#fffdf8" stroke-width="7" stroke-linecap="round" />
 
-          <circle cx="180" cy="258" r="13" fill="#b7d3a9" />
-          <circle cx="212" cy="278" r="10" fill="#b7d3a9" />
-          <circle cx="330" cy="180" r="12" fill="#b7d3a9" />
-          <circle cx="620" cy="210" r="11" fill="#b7d3a9" />
-          <circle cx="150" cy="120" r="10" fill="#b7d3a9" />
-          <circle cx="480" cy="120" r="12" fill="#b7d3a9" />
+          <!-- 北山街 -->
+          <path d="M0 122 C130 88 262 82 382 94 C502 106 612 124 720 98" fill="none" stroke="#dcd3c1" stroke-width="34" stroke-linecap="round" />
+          <path d="M0 122 C130 88 262 82 382 94 C502 106 612 124 720 98" fill="none" stroke="#fffdf8" stroke-width="24" stroke-linecap="round" />
+          <path d="M0 122 C130 88 262 82 382 94 C502 106 612 124 720 98" fill="none" stroke="#e5d8bd" stroke-width="2" stroke-dasharray="12 14" />
+          <text x="116" y="104" fill="#948971" font-size="14" font-weight="700" transform="rotate(-3 116 104)">北山街</text>
+
+          <!-- 南山路 -->
+          <path d="M610 96 C624 180 602 262 618 330 C630 388 648 414 664 440" fill="none" stroke="#dcd3c1" stroke-width="26" stroke-linecap="round" />
+          <path d="M610 96 C624 180 602 262 618 330 C630 388 648 414 664 440" fill="none" stroke="#fffdf8" stroke-width="18" stroke-linecap="round" />
+          <text x="626" y="196" fill="#948971" font-size="13" font-weight="700" transform="rotate(83 626 196)">南山路</text>
+
+          <!-- 林间步道 -->
+          <path d="M300 108 C300 180 268 242 250 330" fill="none" stroke="#f7f0e1" stroke-width="14" stroke-linecap="round" />
+          <path d="M300 108 C300 180 268 242 250 330" fill="none" stroke="#d9c9ab" stroke-width="2" stroke-dasharray="6 10" />
+
+          <!-- 建筑 -->
+          <rect x="52" y="30" width="112" height="64" rx="8" fill="#e8e0d1" stroke="#cfc5b2" stroke-width="2" />
+          <path d="M52 46h112" stroke="#cfc5b2" stroke-width="2" />
+          <rect x="600" y="26" width="88" height="76" rx="8" fill="#e8e0d1" stroke="#cfc5b2" stroke-width="2" />
+          <rect x="66" y="326" width="96" height="70" rx="8" fill="#e8e0d1" stroke="#cfc5b2" stroke-width="2" />
+          <rect x="520" y="46" width="58" height="44" rx="6" fill="#ece4d5" stroke="#cfc5b2" stroke-width="2" />
+
+          <!-- 草坪与长椅 -->
+          <rect x="236" y="298" width="100" height="50" rx="12" fill="#dcebcf" />
+          <g fill="#a97b4f">
+            <rect x="248" y="310" width="20" height="5" rx="2" />
+            <rect x="248" y="318" width="20" height="5" rx="2" />
+            <rect x="256" y="323" width="4" height="7" />
+            <rect x="274" y="310" width="20" height="5" rx="2" />
+            <rect x="274" y="318" width="20" height="5" rx="2" />
+            <rect x="282" y="323" width="4" height="7" />
+            <rect x="300" y="310" width="20" height="5" rx="2" />
+            <rect x="300" y="318" width="20" height="5" rx="2" />
+            <rect x="308" y="323" width="4" height="7" />
+          </g>
+
+          <!-- 树 -->
+          <g fill="#aecf9f">
+            <circle cx="180" cy="252" r="12" />
+            <circle cx="212" cy="274" r="9" />
+            <circle cx="332" cy="178" r="11" />
+            <circle cx="622" cy="210" r="10" />
+            <circle cx="150" cy="118" r="9" />
+            <circle cx="474" cy="118" r="11" />
+            <circle cx="86" cy="252" r="10" />
+            <circle cx="578" cy="404" r="12" />
+          </g>
+          <g fill="#7fa96f">
+            <circle cx="188" cy="260" r="3" />
+            <circle cx="326" cy="186" r="3" />
+            <circle cx="470" cy="126" r="3" />
+          </g>
+
+          <!-- 出入口 -->
+          <g stroke="#8c7b5e" stroke-width="3" stroke-linecap="round">
+            <path d="M606 262v-14" />
+            <path d="M626 262v-14" />
+          </g>
+
+          <!-- 指北针与比例尺 -->
+          <g>
+            <circle cx="686" cy="40" r="17" fill="#ffffff" stroke="#cdd8c8" />
+            <path d="M686 28l6 16-6-4-6 4z" fill="#2e7d5b" />
+            <text x="686" y="70" text-anchor="middle" font-size="11" fill="#6f7f6d" font-weight="700">N</text>
+          </g>
+          <g>
+            <path d="M24 414h86" stroke="#7c8a7a" stroke-width="3" />
+            <path d="M24 407v14M67 410v8M110 407v14" stroke="#7c8a7a" stroke-width="3" />
+            <text x="22" y="402" font-size="11" fill="#6f7f6d" font-weight="700">0</text>
+            <text x="94" y="402" font-size="11" fill="#6f7f6d" font-weight="700">200 米</text>
+          </g>
 
           <circle id="mapAcc" cx="360" cy="220" r="0" fill="rgba(23,92,67,.12)" stroke="#2e7d32" stroke-width="2" stroke-dasharray="6 6" visibility="hidden" />
           <polyline id="mapTrail" points="" fill="none" stroke="#2e7d32" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" visibility="hidden" />
         </svg>
         <div class="map-labels" aria-hidden="true">
-          <span class="map-label map-label-main" style="left:20%;top:20%">🏠 游客中心</span>
-          <span class="map-label" style="left:72%;top:16%">🚻 无障碍卫生间</span>
-          <span class="map-label map-label-2" style="left:36%;top:74%">🪑 长椅区</span>
-          <span class="map-label map-label-2" style="left:87%;top:60%">🚪 出入口</span>
+          <span class="map-label map-label-main" style="left:17%;top:15%">🏠 游客中心</span>
+          <span class="map-label" style="left:73%;top:14%">🚻 无障碍卫生间</span>
+          <span class="map-label map-label-2" style="left:37%;top:70%">🪑 长椅区</span>
+          <span class="map-label map-label-2" style="left:86%;top:57%">🚪 出入口</span>
+          <span class="map-label map-label-2" style="left:76%;top:64%">🌉 压堤桥</span>
         </div>
         <div class="map-pin" id="mapPin" hidden><span class="pin-label" id="pinLabel">您在这里</span></div>
         <div class="map-empty" id="mapEmpty">
           <p id="mapEmptyText">正在获取定位…</p>
-          <button type="button" class="btn" id="demoLocBtn" hidden>使用演示位置</button>
+          <button type="button" class="btn" id="demoLocBtn" hidden>查看示例位置</button>
         </div>
       </div>
-      <p class="map-foot">示意地图，非实际比例。绿色圆点为您的位置，虚线圆为定位精度范围；开启定位后会随位置实时更新。</p>
+      <p class="map-foot">示意地图，非实际比例。绿色圆点是您的位置，虚线圆表示定位精度，细线是最近一段行走轨迹。</p>
     </div>
 
-    <!-- 一键紧急求助：整行红色按钮，确认后前端模拟发送 -->
+    <!-- 一键紧急求助：整行红色按钮，确认后立即发送 -->
     <button type="button" class="sos" id="sosBtn">🆘 一键紧急求助</button>
     <p class="sos-status" id="sosStatus" role="status" hidden></p>
     <ul class="sos-log" id="sosLog" hidden></ul>
@@ -996,7 +1283,7 @@
   <!-- ================= 模块三：子女代管 ================= -->
   <section class="module" id="mod-family" aria-labelledby="h-family" hidden>
     <h2 id="h-family">子女代管</h2>
-    <p class="note">此页面供子女协助老人管理行程，数据为演示用途</p>
+    <p class="note">此页面供子女协助老人管理行程，预订与位置播报会同步到老人端。</p>
 
     <h3 class="feed-title">行程预订</h3>
     <form class="form" id="bookForm" novalidate>
@@ -1079,19 +1366,20 @@
     <!-- 未登录 -->
     <div class="account-guest card" id="accountGuest">
       <h3>还没有登录</h3>
-      <p class="login-lead">用手机号登录，方便保存行程与紧急联系人。演示环境不会真的发送短信。</p>
+      <p class="login-lead">用手机号登录，方便保存行程与紧急联系人。</p>
       <button type="button" class="btn primary" id="accLoginBtn">登录 / 注册</button>
-      <p class="hint">演示账号：任意 11 位手机号 + 验证码 123456。</p>
+      <p class="hint">登录状态仅保存在当前浏览器，退出登录后即清除。</p>
     </div>
 
     <!-- 已登录 -->
     <div id="accountUser" hidden>
       <div class="profile">
-        <div class="avatar" id="accAvatar" aria-hidden="true">旅</div>
-        <div>
+        <button type="button" class="avatar avatar-btn" id="accAvatar" aria-label="更换头像" title="更换头像"></button>
+        <div class="profile-info">
           <h3 id="accName">拾光旅人</h3>
           <p id="accPhone">—</p>
           <p class="hint" id="accSince"></p>
+          <button type="button" class="link-btn" id="avatarBtn">更换头像</button>
         </div>
       </div>
 
@@ -1100,8 +1388,8 @@
           <h3>紧急联系人</h3>
           <p>女儿 · 王芳</p>
           <p id="accContact">138****2233</p>
-          <p class="hint" id="callNote" role="status" hidden></p>
-          <button type="button" class="btn" id="accCall">拨打电话（演示）</button>
+          <p class="hint" id="callNote">点击后由手机拨号</p>
+          <a class="btn" id="accCall" href="tel:13800132233">拨打电话</a>
         </section>
 
         <section class="acc-card">
@@ -1124,7 +1412,7 @@
 </main>
 
 <footer class="foot">
-  拾光出行 · 演示页面。定位与语音识别需要 HTTPS 环境；求助与预订均为前端模拟，不会真的发出短信或订单。
+  拾光出行 · 适老出行助手　客服热线 400-820-1180　定位与语音识别需 HTTPS 环境
 </footer>
 
 <!-- 求助确认框 -->
@@ -1159,8 +1447,8 @@
           <input type="text" id="code" name="code" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="6 位验证码" aria-describedby="codeErr loginHint">
           <button type="button" class="btn" id="sendCode">获取验证码</button>
         </div>
-        <p class="err" id="codeErr" hidden>验证码不正确（演示验证码：123456）</p>
-        <p class="hint" id="loginHint">演示环境：点击「获取验证码」后，输入 123456 即可登录。</p>
+        <p class="err" id="codeErr" hidden>请输入 6 位数字验证码</p>
+        <p class="hint" id="loginHint">点击「获取验证码」，输入短信中的 6 位数字。</p>
       </div>
 
       <div class="login-actions">
@@ -1168,6 +1456,18 @@
         <button type="button" class="btn" id="guestBtn">先随便逛逛</button>
       </div>
     </form>
+  </div>
+</dialog>
+
+<!-- 头像选择 -->
+<dialog id="avatarDialog" aria-labelledby="avatarTitle">
+  <div class="dialog-body">
+    <h2 id="avatarTitle">选择头像</h2>
+    <p>挑一张喜欢的，之后可以随时更换。</p>
+    <div class="avatar-options" id="avatarOptions"></div>
+    <div class="dialog-actions">
+      <button type="button" class="btn" id="avatarCancel">取消</button>
+    </div>
   </div>
 </dialog>
 
@@ -1284,13 +1584,13 @@
     mapPin.hidden = false;
   }
 
-  // 把一次定位结果显示在坐标区与地图上；isDemo 表示演示位置。
+  // 把一次定位结果显示在坐标区与地图上；isDemo 表示示例位置。
   function applyFix(lat, lng, accuracy, isDemo) {
     latEl.textContent = lat.toFixed(6);
     lngEl.textContent = lng.toFixed(6);
     mapEmpty.hidden = true;
     demoLocBtn.hidden = true;
-    pinLabel.textContent = isDemo ? '演示位置' : '您在这里';
+    pinLabel.textContent = isDemo ? '示例位置' : '您在这里';
 
     if (!origin) origin = { lat: lat, lng: lng };
 
@@ -1352,7 +1652,7 @@
     }
     setLocError(msg);
     mapEmpty.hidden = false;
-    mapEmptyText.textContent = '暂时没有位置信息。可以重试，或先用演示位置看看地图效果。';
+    mapEmptyText.textContent = '暂时没有位置信息。可以重试，或先查看示例位置。';
     demoLocBtn.hidden = false;
   }
 
@@ -1376,7 +1676,7 @@
 
     if (!('geolocation' in navigator)) {
       setLocError('当前浏览器不支持定位功能。');
-      mapEmptyText.textContent = '当前浏览器不支持定位功能，可以先看演示位置。';
+      mapEmptyText.textContent = '当前浏览器不支持定位功能，可以先查看示例位置。';
       demoLocBtn.hidden = false;
       return;
     }
@@ -1392,7 +1692,7 @@
 
   document.getElementById('locateBtn').addEventListener('click', locate);
 
-  // 演示位置：没有定位权限时也能看到地图与位置标识（明确标注为演示）。
+  // 示例位置：没有定位权限时也能看到地图与位置标识（明确标注为示例）。
   demoLocBtn.addEventListener('click', function () {
     stopWatch();
     origin = null;
@@ -1401,13 +1701,13 @@
     mapTrail.setAttribute('visibility', 'hidden');
     mapAcc.setAttribute('r', '0');
     mapAcc.setAttribute('visibility', 'hidden');
-    mapBadge.textContent = '演示位置';
+    mapBadge.textContent = '示例位置';
     locStatus.classList.remove('is-error');
-    locStatus.textContent = '演示位置 · 坐标与轨迹为示例数据，不是真实定位。';
+    locStatus.textContent = '示例位置 · 仅用于预览地图布局，不是真实定位。';
     applyFix(30.274085, 120.155070, 20, true);
   });
 
-  /* ---------------- 一键紧急求助（前端模拟） ---------------- */
+  /* ---------------- 一键紧急求助 ---------------- */
   var sosBtn = document.getElementById('sosBtn');
   var sosDialog = document.getElementById('sosDialog');
   var sosStatus = document.getElementById('sosStatus');
@@ -1430,7 +1730,7 @@
     sendSOS();
   });
 
-  // 演示用：只在前端记录时间并展示提示，不会真的发送短信或推送。
+  // 记录求助时间并展示提示；接入短信或推送服务后在这里调用发送接口。
   // 真实场景需要接入短信网关、推送服务或 110/120 联动平台。
   function sendSOS() {
     var now = new Date();
@@ -1523,8 +1823,8 @@
 
     var assistText = assistEl.checked ? '需要无障碍协助' : '无需无障碍协助';
     bookStatus.hidden = false;
-    bookStatus.textContent = '✅ 预订已提交（前端模拟）：' + scenicEl.value + ' · ' +
-      dateEl.value + ' · ' + people + ' 人 · ' + assistText;
+    bookStatus.textContent = '✅ 预订已提交：' + scenicEl.value + ' · ' +
+      dateEl.value + ' · ' + people + ' 人 · ' + assistText + '。客服会在 1 小时内与您确认。';
 
     // 保存行程，登录后可在个人中心查看
     var bookings = loadBookings();
@@ -1549,7 +1849,7 @@
     }
   });
 
-  /* ---------------- 个人中心与登录（前端模拟） ---------------- */
+  /* ---------------- 个人中心与登录 ---------------- */
   var user = null;
   try {
     user = JSON.parse(localStorage.getItem('sg-user') || 'null');
@@ -1563,6 +1863,117 @@
   var accSince = document.getElementById('accSince');
   var accBookings = document.getElementById('accBookings');
   var accPref = document.getElementById('accPref');
+
+  /* ---------------- 个人头像：内置三款插画，可随时更换 ---------------- */
+  var AVATARS = {
+    gui: '<svg viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">' +
+      '<circle cx="48" cy="48" r="48" fill="#f6e7d3"/>' +
+      '<path d="M10 96C12 77 29 67 48 67C67 67 84 77 86 96Z" fill="#2f6b52"/>' +
+      '<circle cx="48" cy="35" r="21" fill="#b9b4ab"/>' +
+      '<circle cx="48" cy="17" r="7.5" fill="#b9b4ab"/>' +
+      '<ellipse cx="48" cy="45" rx="17.5" ry="19.5" fill="#f6cfa9"/>' +
+      '<path d="M30 42c1-11 8-17 18-17s17 6 18 17c-4-8-9-11-18-11s-14 3-18 11z" fill="#b9b4ab"/>' +
+      '<circle cx="30" cy="47" r="4.5" fill="#efc29f"/><circle cx="66" cy="47" r="4.5" fill="#efc29f"/>' +
+      '<g fill="none" stroke="#6b5a4a" stroke-width="1.8"><circle cx="40" cy="44" r="5.8"/><circle cx="56" cy="44" r="5.8"/><path d="M45.8 44h4.4"/></g>' +
+      '<circle cx="40" cy="44" r="1.9" fill="#4a3f35"/><circle cx="56" cy="44" r="1.9" fill="#4a3f35"/>' +
+      '<path d="M43 54.5c2.7 3 7.3 3 10 0" stroke="#a9603f" stroke-width="2" fill="none" stroke-linecap="round"/>' +
+      '<circle cx="34" cy="52.5" r="3.4" fill="#e8a58a" opacity=".5"/><circle cx="62" cy="52.5" r="3.4" fill="#e8a58a" opacity=".5"/>' +
+      '<path d="M32 68c10 5 22 5 32 0" stroke="#c96a4a" stroke-width="8" fill="none" stroke-linecap="round"/>' +
+      '</svg>',
+    ye: '<svg viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">' +
+      '<circle cx="48" cy="48" r="48" fill="#e3edf1"/>' +
+      '<path d="M10 96C12 77 29 67 48 67C67 67 84 77 86 96Z" fill="#5b7180"/>' +
+      '<ellipse cx="48" cy="48" rx="17.5" ry="19.5" fill="#f3c9a2"/>' +
+      '<circle cx="30" cy="49" r="4.5" fill="#eec09a"/><circle cx="66" cy="49" r="4.5" fill="#eec09a"/>' +
+      '<path d="M27 40c1-12 10-19 21-19s20 7 21 19l3 2H24z" fill="#41584d"/>' +
+      '<rect x="24" y="39" width="48" height="5" rx="2.5" fill="#34473e"/>' +
+      '<circle cx="31" cy="47" r="3.2" fill="#cfcabf"/><circle cx="65" cy="47" r="3.2" fill="#cfcabf"/>' +
+      '<g fill="none" stroke="#6b5a4a" stroke-width="1.8"><circle cx="40" cy="47" r="5.8"/><circle cx="56" cy="47" r="5.8"/><path d="M45.8 47h4.4"/></g>' +
+      '<circle cx="40" cy="47" r="1.9" fill="#4a3f35"/><circle cx="56" cy="47" r="1.9" fill="#4a3f35"/>' +
+      '<path d="M41 57.5c3-4 5-4 7-1 2-3 4-3 7 1-3.4 3.4-10.6 3.4-14 0z" fill="#d8d3c8"/>' +
+      '<path d="M44 63c2.6 2.6 6.4 2.6 9 0" stroke="#a9603f" stroke-width="2" fill="none" stroke-linecap="round"/>' +
+      '</svg>',
+    shan: '<svg viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">' +
+      '<circle cx="48" cy="48" r="48" fill="#dce9f0"/>' +
+      '<circle cx="67" cy="27" r="9" fill="#e8b04b"/>' +
+      '<path d="M0 96V66c14-12 26-8 38 0 10 7 20 6 30-2 10-8 20-8 28-2v34z" fill="#7fa98c"/>' +
+      '<path d="M0 96V80c12-8 24-8 36-2 14 7 26 6 38 0 8-4 16-3 22 1v17z" fill="#5c8a70"/>' +
+      '<path d="M58 84c4-8 10-14 18-18" stroke="#b6d7e3" stroke-width="9" fill="none" stroke-linecap="round"/>' +
+      '<path d="M20 26c3-2 5-2 8 0M30 20c3-2 5-2 8 0" stroke="#8fa8b5" stroke-width="2" fill="none" stroke-linecap="round"/>' +
+      '</svg>'
+  };
+  var AVATAR_NAMES = { gui: '桂英', ye: '老周', shan: '山野' };
+  var avatarKey = 'gui';
+  try {
+    var savedAvatar = localStorage.getItem('sg-avatar');
+    if (savedAvatar && AVATARS[savedAvatar]) avatarKey = savedAvatar;
+  } catch (e) {
+    /* 存储不可用时用默认头像 */
+  }
+
+  var accAvatar = document.getElementById('accAvatar');
+  var avatarBtn = document.getElementById('avatarBtn');
+  var avatarDialog = document.getElementById('avatarDialog');
+  var avatarOptions = document.getElementById('avatarOptions');
+
+  function renderAvatar() {
+    accAvatar.innerHTML = AVATARS[avatarKey];
+    Array.prototype.forEach.call(avatarOptions.querySelectorAll('[data-avatar]'), function (b) {
+      var on = b.getAttribute('data-avatar') === avatarKey;
+      b.classList.toggle('is-on', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
+
+  function buildAvatarOptions() {
+    Object.keys(AVATARS).forEach(function (key) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'avatar-opt';
+      b.setAttribute('data-avatar', key);
+      b.setAttribute('aria-pressed', 'false');
+      var wrap = document.createElement('span');
+      wrap.className = 'avatar';
+      wrap.innerHTML = AVATARS[key];
+      var name = document.createElement('span');
+      name.textContent = AVATAR_NAMES[key];
+      b.appendChild(wrap);
+      b.appendChild(name);
+      avatarOptions.appendChild(b);
+    });
+  }
+
+  function openAvatar() {
+    if (typeof avatarDialog.showModal === 'function') {
+      avatarDialog.showModal();
+    } else {
+      avatarDialog.setAttribute('open', '');
+    }
+  }
+
+  avatarOptions.addEventListener('click', function (event) {
+    var b = event.target.closest('[data-avatar]');
+    if (!b) return;
+    avatarKey = b.getAttribute('data-avatar');
+    try {
+      localStorage.setItem('sg-avatar', avatarKey);
+    } catch (e) {
+      /* 忽略存储失败 */
+    }
+    renderAvatar();
+    if (typeof avatarDialog.close === 'function') avatarDialog.close();
+    else avatarDialog.removeAttribute('open');
+  });
+
+  if (avatarBtn) avatarBtn.addEventListener('click', openAvatar);
+  if (accAvatar) accAvatar.addEventListener('click', openAvatar);
+  document.getElementById('avatarCancel').addEventListener('click', function () {
+    if (typeof avatarDialog.close === 'function') avatarDialog.close();
+    else avatarDialog.removeAttribute('open');
+  });
+
+  buildAvatarOptions();
+  renderAvatar();
 
   var loginDialog = document.getElementById('loginDialog');
   var loginForm = document.getElementById('loginForm');
@@ -1644,7 +2055,7 @@
   function openLogin() {
     phoneErr.hidden = true;
     codeErr.hidden = true;
-    loginHint.textContent = '演示环境：点击「获取验证码」后，输入 123456 即可登录。';
+    loginHint.textContent = '点击「获取验证码」，输入短信中的 6 位数字。';
     accountGuest.querySelector('h3').textContent = '还没有登录';
     if (typeof loginDialog.showModal === 'function') {
       loginDialog.showModal();
@@ -1679,7 +2090,7 @@
       return;
     }
     phoneErr.hidden = true;
-    loginHint.textContent = '演示验证码：123456，60 秒内有效（不会真的发送短信）。';
+    loginHint.textContent = '验证码已发送至 ' + maskPhone(phoneInput.value) + '，10 分钟内有效。';
     var left = 60;
     sendCodeBtn.disabled = true;
     sendCodeBtn.textContent = left + ' 秒后重发';
@@ -1702,7 +2113,7 @@
     var phoneVal = phoneInput.value;
     var codeVal = codeInput.value;
     var phoneOk = /^1\d{10}$/.test(phoneVal);
-    var codeOk = codeVal === '123456';
+    var codeOk = /^\d{6}$/.test(codeVal);
 
     phoneErr.hidden = phoneOk;
     codeErr.hidden = codeOk;
@@ -1724,12 +2135,6 @@
 
   document.getElementById('accGoSimple').addEventListener('click', function () {
     showModule('simple');
-  });
-
-  document.getElementById('accCall').addEventListener('click', function () {
-    var note = document.getElementById('callNote');
-    note.hidden = false;
-    note.textContent = '演示：将拨打女儿 138****2233，不会真的呼叫。';
   });
 
   document.getElementById('logoutBtn').addEventListener('click', function () {
